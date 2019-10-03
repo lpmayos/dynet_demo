@@ -8,9 +8,8 @@ import numpy as np
 import io
 import logging
 
-
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%d-%m-%Y %H:%M:%S', level=logging.INFO)
-
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s:%(levelname)s:\t%(message)s")
 
 UNK_TOKEN = "_UNK_"
 START_TOKEN = "_START_"
@@ -26,7 +25,8 @@ class POSTagger:
                  test_path="test.conll",
                  log_frequency=1000,
                  n_epochs=5,
-                 learning_rate=0.001):
+                 learning_rate=0.001,
+                 use_char_lstm=False):
         """ Initialize the POS tagger.
         :param train_path: path to training data (CONLL format)
         :param dev_path: path to dev data (CONLL format)
@@ -35,6 +35,7 @@ class POSTagger:
         self.log_frequency = log_frequency
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
+        self.use_char_lstm = use_char_lstm
 
         # load data
         self.train_data, self.dev_data, self.test_data = POSTagger.load_data(train_path, dev_path, test_path)
@@ -47,6 +48,19 @@ class POSTagger:
         self.n_tags = self.tag_vocab.size()
 
         self.model, self.params, self.builders = self.build_model()
+
+        self.log_parameters(train_path, dev_path, test_path)
+
+    def log_parameters(self, train_path, dev_path, test_path):
+        logging.info('log_frequency: %s' % self.log_frequency)
+        logging.info('n_epochs: % s' % self.n_epochs)
+        logging.info('learning_rate: % s' % self.learning_rate)
+        logging.info('use_char_lstm: % s' % self.use_char_lstm)
+        logging.info('train_path: % s' % train_path)
+        logging.info('dev_path: % s' % dev_path)
+        logging.info('test_path: % s' % test_path)
+        logging.info('n_words: % s' % self.n_words)
+        logging.info('n_tags: % s' % self.n_tags)
 
     @staticmethod
     def load_data(train_path=None, dev_path=None, test_path=None):
@@ -96,7 +110,30 @@ class POSTagger:
             dy.LSTMBuilder(1, 128, 50, model),
             dy.LSTMBuilder(1, 128, 50, model)]
 
+        if self.use_char_lstm:
+            self.nchars = xxx
+            self.WORDS_LOOKUP = model.add_lookup_parameters((self.nchars, 20))
+            self.fwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
+            self.bwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
+
+
         return model, params, builders
+
+    def word_repr(self, w):
+        if not self.use_char_lstm:
+            return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
+        else:
+            if self.word_vocab.wc[w] > 1:  # TODO review min appearances to use embedding; originally 5
+                return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
+            else:
+                """
+                char_ids = [vc.w2i[c] for c in w]
+                char_embs = [CHARS_LOOKUP[cid] for cid in char_ids]
+                fw_exps = fwdRNN_chars.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
+                bw_exps = bwdRNN_chars.transduce(reversed(char_embs))
+                return dy.concatenate([fw_exps[-1], bw_exps[-1]])
+                """
+                raise NotImplementedError
 
     def tag_sent(self, sent, builders):
         """ Tags a single sentence.
@@ -105,7 +142,7 @@ class POSTagger:
 
         f_init, b_init = [b.initial_state() for b in builders]
 
-        wembs = [self.params["E"][self.word_vocab.w2i.get(w, self.unk)] for w, t in sent]
+        wembs = [self.word_repr(w) for w, t in sent]
 
         fw = [x.output() for x in f_init.add_inputs(wembs)]
         bw = [x.output() for x in b_init.add_inputs(reversed(wembs))]
@@ -130,7 +167,7 @@ class POSTagger:
         f_init, b_init = [b.initial_state() for b in builders]
 
         wembs = [self.params["E"][w] for w in words]
-        wembs = [dy.noise(we, 0.1) for we in wembs]
+        wembs = [dy.noise(we, 0.1) for we in wembs]  # TODO see what happens without adding noise
 
         # transduce takes a list of expressions, feeds them and returns a list; it is equivalent to:
         fw = f_init.transduce(wembs)            # fw = [x.output() for x in f_init.add_inputs(wembs)]
@@ -196,17 +233,20 @@ class POSTagger:
 
 
 class Vocab:
-    def __init__(self, w2i):
+    def __init__(self, w2i, wc):
         self.w2i = dict(w2i)
         self.i2w = {i: w for w, i in w2i.items()}
+        self.wc = wc
 
     @classmethod
     def from_corpus(cls, corpus):
         w2i = {}
+        wc = Counter()
         for sent in corpus:
             for word in sent:
                 w2i.setdefault(word, len(w2i))
-        return Vocab(w2i)
+                wc[word] += 1
+        return Vocab(w2i, wc)
 
     def size(self):
         return len(self.w2i.keys())
@@ -236,9 +276,10 @@ def main():
     train_path = os.path.join(data_dir, "en-ud-train.conllu")
     dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
+    use_char_lstm = True
 
     # create a POS tagger object
-    pt = POSTagger(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1)
+    pt = POSTagger(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1, use_char_lstm=use_char_lstm)
 
     # let's train it!
     pt.train()
