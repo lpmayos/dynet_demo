@@ -111,11 +111,16 @@ class POSTagger:
             dy.LSTMBuilder(1, 128, 50, model)]
 
         if self.use_char_lstm:
-            self.nchars = xxx
-            self.WORDS_LOOKUP = model.add_lookup_parameters((self.nchars, 20))
+            characters = list("abcdefghijklmnopqrstuvwxyz ")
+            characters.append(UNK_TOKEN)
+            self.i2c = list(characters)
+            self.c2i = {c: i for i, c in enumerate(characters)}
+            self.nchars = len(characters)
+            self.unk_c = self.c2i[UNK_TOKEN]
+
+            params["CE"] = model.add_lookup_parameters((self.nchars, 20))
             self.fwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
             self.bwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
-
 
         return model, params, builders
 
@@ -126,14 +131,15 @@ class POSTagger:
             if self.word_vocab.wc[w] > 1:  # TODO review min appearances to use embedding; originally 5
                 return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
             else:
-                """
-                char_ids = [vc.w2i[c] for c in w]
-                char_embs = [CHARS_LOOKUP[cid] for cid in char_ids]
-                fw_exps = fwdRNN_chars.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
-                bw_exps = bwdRNN_chars.transduce(reversed(char_embs))
+                char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in w]
+                char_embs = [self.params["CE"][cid] for cid in char_ids]
+
+                f_init = self.fwdRNN_chars.initial_state()
+                b_init = self.bwdRNN_chars.initial_state()
+
+                fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
+                bw_exps = b_init.transduce(reversed(char_embs))
                 return dy.concatenate([fw_exps[-1], bw_exps[-1]])
-                """
-                raise NotImplementedError
 
     def tag_sent(self, sent, builders):
         """ Tags a single sentence.
@@ -167,7 +173,7 @@ class POSTagger:
         f_init, b_init = [b.initial_state() for b in builders]
 
         wembs = [self.params["E"][w] for w in words]
-        wembs = [dy.noise(we, 0.1) for we in wembs]  # TODO see what happens without adding noise
+        # wembs = [dy.noise(we, 0.1) for we in wembs]  # TODO see what happens with/without adding noise
 
         # transduce takes a list of expressions, feeds them and returns a list; it is equivalent to:
         fw = f_init.transduce(wembs)            # fw = [x.output() for x in f_init.add_inputs(wembs)]
@@ -276,10 +282,10 @@ def main():
     train_path = os.path.join(data_dir, "en-ud-train.conllu")
     dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
-    use_char_lstm = True
+    use_char_lstm = False
 
     # create a POS tagger object
-    pt = POSTagger(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1, use_char_lstm=use_char_lstm)
+    pt = POSTagger(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=5, use_char_lstm=use_char_lstm)
 
     # let's train it!
     pt.train()
