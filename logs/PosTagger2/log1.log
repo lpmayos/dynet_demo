@@ -1,0 +1,21 @@
+2019-10-04 15:07:24,130:INFO:	log_frequency: 1000
+2019-10-04 15:07:24,130:INFO:	n_epochs: 1
+2019-10-04 15:07:24,130:INFO:	learning_rate: 0.001
+2019-10-04 15:07:24,130:INFO:	train_path: /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/en-ud-train.conllu
+2019-10-04 15:07:24,130:INFO:	dev_path: /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/en-ud-dev.conllu
+2019-10-04 15:07:24,130:INFO:	test_path: /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/en-ud-test.conllu
+2019-10-04 15:07:24,130:INFO:	n_words: 9874
+2019-10-04 15:07:24,130:INFO:	n_tags: 51
+2019-10-04 15:07:33,865:INFO:	Epoch 0 Iter 1000 Loss: 2.045437 Accuracy: 0.6527
+2019-10-04 15:07:43,310:INFO:	Epoch 0 Iter 2000 Loss: 0.987969 Accuracy: 0.7749
+2019-10-04 15:07:52,755:INFO:	Epoch 0 Iter 3000 Loss: 0.676392 Accuracy: 0.8324
+2019-10-04 15:08:02,209:INFO:	Epoch 0 Iter 4000 Loss: 0.527285 Accuracy: 0.8546
+2019-10-04 15:08:11,674:INFO:	Epoch 0 Iter 5000 Loss: 0.464890 Accuracy: 0.8687
+2019-10-04 15:08:21,382:INFO:	Epoch 0 Iter 6000 Loss: 0.417959 Accuracy: 0.8714
+2019-10-04 15:08:31,132:INFO:	Epoch 0 Iter 7000 Loss: 0.382858 Accuracy: 0.8771
+2019-10-04 15:08:41,236:INFO:	Epoch 0 Iter 8000 Loss: 0.380399 Accuracy: 0.8888
+2019-10-04 15:08:51,066:INFO:	Epoch 0 Iter 9000 Loss: 0.336690 Accuracy: 0.8874
+2019-10-04 15:09:00,992:INFO:	Epoch 0 Iter 10000 Loss: 0.335133 Accuracy: 0.8951
+2019-10-04 15:09:11,103:INFO:	Epoch 0 Iter 11000 Loss: 0.340320 Accuracy: 0.8959
+2019-10-04 15:09:21,586:INFO:	Epoch 0 Iter 12000 Loss: 0.314974 Accuracy: 0.8990
+2019-10-04 15:09:28,944:INFO:	Test accuracy: 0.8992309837829222

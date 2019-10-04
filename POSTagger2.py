@@ -15,7 +15,7 @@ UNK_TOKEN = "_UNK_"
 START_TOKEN = "_START_"
 
 
-class POSTagger:
+class POSTagger2:
     """ A POS-tagger implemented in Dynet, based on https://github.com/clab/dynet/tree/master/examples/python
     """
 
@@ -25,8 +25,7 @@ class POSTagger:
                  test_path="test.conll",
                  log_frequency=1000,
                  n_epochs=5,
-                 learning_rate=0.001,
-                 use_char_lstm=False):
+                 learning_rate=0.001):
         """ Initialize the POS tagger.
         :param train_path: path to training data (CONLL format)
         :param dev_path: path to dev data (CONLL format)
@@ -35,10 +34,9 @@ class POSTagger:
         self.log_frequency = log_frequency
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
-        self.use_char_lstm = use_char_lstm
 
         # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger.load_data(train_path, dev_path, test_path)
+        self.train_data, self.dev_data, self.test_data = POSTagger2.load_data(train_path, dev_path, test_path)
 
         # create vocabularies
         self.word_vocab, self.tag_vocab = self.create_vocabularies()
@@ -47,7 +45,15 @@ class POSTagger:
         self.n_words = self.word_vocab.size()
         self.n_tags = self.tag_vocab.size()
 
-        self.model, self.params, self.builders = self.build_model()
+        # for character-level embeddings
+        characters = list("abcdefghijklmnopqrstuvwxyz ")
+        characters.append(UNK_TOKEN)
+        self.i2c = list(characters)
+        self.c2i = {c: i for i, c in enumerate(characters)}
+        self.nchars = len(characters)
+        self.unk_c = self.c2i[UNK_TOKEN]
+
+        self.model, self.params, self.builders, self.builders_c = self.build_model()
 
         self.log_parameters(train_path, dev_path, test_path)
 
@@ -55,7 +61,6 @@ class POSTagger:
         logging.info('log_frequency: %s' % self.log_frequency)
         logging.info('n_epochs: % s' % self.n_epochs)
         logging.info('learning_rate: % s' % self.learning_rate)
-        logging.info('use_char_lstm: % s' % self.use_char_lstm)
         logging.info('train_path: % s' % train_path)
         logging.info('dev_path: % s' % dev_path)
         logging.info('test_path: % s' % test_path)
@@ -106,40 +111,52 @@ class POSTagger:
         params["H"] = model.add_parameters((32, 50*2))
         params["O"] = model.add_parameters((self.n_tags, 32))
 
+        # character-level embeddings
+        params["CE"] = model.add_lookup_parameters((self.nchars, 20))
+        builders_c = [
+            dy.LSTMBuilder(1, 20, 64, model),
+            dy.LSTMBuilder(1, 20, 64, model)]
+
+        # input encoder? TODO make sure!
+        input_size = 128 + 64 * 2 # word_embedding size from lookup table + character embedding size
         builders = [
-            dy.LSTMBuilder(1, 128, 50, model),
-            dy.LSTMBuilder(1, 128, 50, model)]  # 1 layer, 128 input size, 50 hidden units, model
+            dy.LSTMBuilder(1, input_size, 50, model),
+            dy.LSTMBuilder(1, input_size, 50, model)]  # 1 layer, 128 input size, 50 hidden units, model
 
-        if self.use_char_lstm:
-            characters = list("abcdefghijklmnopqrstuvwxyz ")
-            characters.append(UNK_TOKEN)
-            self.i2c = list(characters)
-            self.c2i = {c: i for i, c in enumerate(characters)}
-            self.nchars = len(characters)
-            self.unk_c = self.c2i[UNK_TOKEN]
 
-            params["CE"] = model.add_lookup_parameters((self.nchars, 20))  # TODO how do I know if it is being updated un backward() <-- it should not, as I'm not using it in training (just for the missing words in test)
-            self.fwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
-            self.bwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
 
-        return model, params, builders
+        return model, params, builders, builders_c
 
-    def word_repr(self, w):
-        if not self.use_char_lstm:
-            return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
+    def get_word_repr(self, w, add_noise=False):
+        """
+        """
+        if isinstance(w, str):
+            word = w
+            word_id = self.word_vocab.w2i.get(w, self.unk)
         else:
-            if self.word_vocab.wc[w] > 1:  # TODO review min appearances to use embedding; originally 5
-                return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
-            else:
-                char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in w]
-                char_embs = [self.params["CE"][cid] for cid in char_ids]
+            word_id = w
+            word = self.word_vocab.i2w.get(w, self.unk)
 
-                f_init = self.fwdRNN_chars.initial_state()
-                b_init = self.bwdRNN_chars.initial_state()
+        # get word_embedding
+        w_emb = self.params["E"][word_id]
 
-                fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
-                bw_exps = b_init.transduce(reversed(char_embs))
-                return dy.concatenate([fw_exps[-1], bw_exps[-1]])
+        # add char-level embedding
+        char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in word]
+        char_embs = [self.params["CE"][cid] for cid in char_ids]
+
+        f_init, b_init = [b.initial_state() for b in self.builders_c]
+
+        fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
+        bw_exps = b_init.transduce(reversed(char_embs))
+        c_emb = dy.concatenate([fw_exps[-1], bw_exps[-1]])
+
+        # concatenate w_emb and c_emb
+        emb = dy.concatenate([w_emb, c_emb])
+
+        if add_noise:
+            emb = dy.noise(emb, 0.1)  # Add gaussian noise to an expression (0.1 is the standard deviation of the gaussian)
+
+        return emb
 
     def tag_sent(self, sent, builders):
         """ Tags a single sentence.
@@ -148,7 +165,7 @@ class POSTagger:
 
         f_init, b_init = [b.initial_state() for b in builders]
 
-        wembs = [self.word_repr(w) for w, t in sent]
+        wembs = [self.get_word_repr(w) for w, t in sent]
 
         fw = [x.output() for x in f_init.add_inputs(wembs)]
         bw = [x.output() for x in b_init.add_inputs(reversed(wembs))]
@@ -172,8 +189,7 @@ class POSTagger:
 
         f_init, b_init = [b.initial_state() for b in builders]
 
-        wembs = [self.params["E"][w] for w in words]
-        # wembs = [dy.noise(we, 0.1) for we in wembs]  # TODO see what happens with/without adding noise
+        wembs = [self.get_word_repr(w, add_noise=False) for w in words]  # TODO see what happens with/without adding noise
 
         # transduce takes a list of expressions, feeds them and returns a list; it is equivalent to:
         fw = f_init.transduce(wembs)            # fw = [x.output() for x in f_init.add_inputs(wembs)]
@@ -283,7 +299,7 @@ def main():
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
 
     # create a POS tagger object
-    pt = POSTagger(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1, use_char_lstm=True)
+    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1)
 
     # let's train it!
     pt.train()
