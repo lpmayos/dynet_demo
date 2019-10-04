@@ -1,4 +1,9 @@
-# Source: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
+# Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
+# POS Tagger that concatenates word embeddings with character-level embeddings to represent words, and feeds them through a biLSTM to encode the words and generate tags
+
+#                       --> lookup table --> we
+# [word1, word2, ...]                                                         --> [we + we2_c] --> biLSTM --> MLP --> tags
+#                       --> lookup table --> we_c --> biLSTM   --> we2_c
 
 import dynet as dy
 from collections import Counter

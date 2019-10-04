@@ -1,4 +1,8 @@
-# Source: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
+# Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
+# POS Tagger that allows to use a character-based bi-LSTM for unknown words
+
+# [word1, word2, ...] --> lookup table or char_bilstm --> we --> biLSTM  --> MLP --> tags
+
 
 import dynet as dy
 from collections import Counter
