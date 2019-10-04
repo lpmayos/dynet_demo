@@ -106,24 +106,26 @@ class POSTagger2:
         model = dy.ParameterCollection()
 
         params = {}
-        params["E"] = model.add_lookup_parameters((self.n_words, 128))
-
-        params["H"] = model.add_parameters((32, 50*2))
-        params["O"] = model.add_parameters((self.n_tags, 32))
+        word_embs_dim = 128
+        params["E"] = model.add_lookup_parameters((self.n_words, word_embs_dim))
 
         # character-level embeddings
-        params["CE"] = model.add_lookup_parameters((self.nchars, 20))
+        input_size_c = 20
+        output_size_c = 64  # hidden units
+        params["CE"] = model.add_lookup_parameters((self.nchars, input_size_c))
         builders_c = [
-            dy.LSTMBuilder(1, 20, 64, model),
-            dy.LSTMBuilder(1, 20, 64, model)]
+            dy.LSTMBuilder(1, input_size_c, output_size_c, model),
+            dy.LSTMBuilder(1, input_size_c, output_size_c, model)]
 
-        # input encoder? TODO make sure!
-        input_size = 128 + 64 * 2 # word_embedding size from lookup table + character embedding size
+        # input encoder
+        input_size = word_embs_dim + output_size_c * 2 # word_embedding size from lookup table + character embedding size
+        output_size = 50  # hidden units
         builders = [
-            dy.LSTMBuilder(1, input_size, 50, model),
-            dy.LSTMBuilder(1, input_size, 50, model)]  # 1 layer, 128 input size, 50 hidden units, model
+            dy.LSTMBuilder(1, input_size, output_size, model),
+            dy.LSTMBuilder(1, input_size, output_size, model)]  # num layers, input size, hidden units, model
 
-
+        params["H"] = model.add_parameters((32, output_size*2))
+        params["O"] = model.add_parameters((self.n_tags, 32))
 
         return model, params, builders, builders_c
 
