@@ -145,12 +145,12 @@ class POSTagger:
                 bw_exps = b_init.transduce(reversed(char_embs))
                 return dy.concatenate([fw_exps[-1], bw_exps[-1]])
 
-    def tag_sent(self, sent, builders):
+    def tag_sent(self, sent):
         """ Tags a single sentence.
         """
         dy.renew_cg()
 
-        f_init, b_init = [b.initial_state() for b in builders]
+        f_init, b_init = [b.initial_state() for b in self.builders]
 
         wembs = [self.word_repr(w) for w, t in sent]
 
@@ -169,12 +169,12 @@ class POSTagger:
 
         return tags
 
-    def build_tagging_graph(self, words, tags, builders):
+    def build_tagging_graph(self, words, tags):
         """ Builds the graph for a single sentence.
         """
         dy.renew_cg()
 
-        f_init, b_init = [b.initial_state() for b in builders]
+        f_init, b_init = [b.initial_state() for b in self.builders]
 
         wembs = [self.params["E"][w] for w in words]
         # wembs = [dy.noise(we, 0.1) for we in wembs]  # TODO see what happens with/without adding noise
@@ -218,7 +218,7 @@ class POSTagger:
                 words = [self.word_vocab.w2i.get(word, self.unk) for word, _ in s]
                 tags = [self.tag_vocab.w2i[tag] for _, tag in s]
 
-                sum_errs = self.build_tagging_graph(words, tags, self.builders)
+                sum_errs = self.build_tagging_graph(words, tags)
                 loss += sum_errs.scalar_value()
                 tagged += len(tags)
 
@@ -231,7 +231,7 @@ class POSTagger:
         """
         good = bad = 0.0
         for sent in eval_data:
-            tags = self.tag_sent(sent, self.builders)
+            tags = self.tag_sent(sent)
             golds = [t for w, t in sent]
             for go, gu in zip(golds, tags):
                 if go == gu:
@@ -240,6 +240,7 @@ class POSTagger:
                     bad += 1
         accuracy = good / (good+bad)
         return accuracy
+
 
 class Vocab:
     def __init__(self, w2i, wc):

@@ -1,9 +1,15 @@
 # Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
 # POS Tagger that concatenates word embeddings with character-level embeddings to represent words, and feeds them through a biLSTM to encode the words and generate tags
 
+# NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need something with fixed size!
+# NOTICE how each sequence has a different length, but its OK, the LstmAcceptor doesn’t care. We create a new graph for each example, at exactly the desired length.
+#       --> in POSTagger4, we add mini-batching support
+
+
 #                       --> lookup table --> we
 # [word1, word2, ...]                                                         --> [we + we2_c] --> biLSTM --> MLP --> tags
 #                       --> lookup table --> we_c --> biLSTM   --> we2_c
+import time
 
 import dynet as dy
 from collections import Counter
@@ -165,12 +171,12 @@ class POSTagger2:
 
         return emb
 
-    def tag_sent(self, sent, builders):
+    def tag_sent(self, sent):
         """ Tags a single sentence.
         """
         dy.renew_cg()
 
-        f_init, b_init = [b.initial_state() for b in builders]
+        f_init, b_init = [b.initial_state() for b in self.builders]
 
         wembs = [self.get_word_repr(w) for w, t in sent]
 
@@ -189,12 +195,12 @@ class POSTagger2:
 
         return tags
 
-    def build_tagging_graph(self, words, tags, builders):
+    def build_tagging_graph(self, words, tags):
         """ Builds the graph for a single sentence.
         """
         dy.renew_cg()
 
-        f_init, b_init = [b.initial_state() for b in builders]
+        f_init, b_init = [b.initial_state() for b in self.builders]
 
         wembs = [self.get_word_repr(w, add_noise=False) for w in words]  # TODO see what happens with/without adding noise
 
@@ -237,7 +243,7 @@ class POSTagger2:
                 words = [self.word_vocab.w2i.get(word, self.unk) for word, _ in s]
                 tags = [self.tag_vocab.w2i[tag] for _, tag in s]
 
-                sum_errs = self.build_tagging_graph(words, tags, self.builders)
+                sum_errs = self.build_tagging_graph(words, tags)
                 loss += sum_errs.scalar_value()
                 tagged += len(tags)
 
@@ -250,7 +256,7 @@ class POSTagger2:
         """
         good = bad = 0.0
         for sent in eval_data:
-            tags = self.tag_sent(sent, self.builders)
+            tags = self.tag_sent(sent)
             golds = [t for w, t in sent]
             for go, gu in zip(golds, tags):
                 if go == gu:
@@ -259,6 +265,7 @@ class POSTagger2:
                     bad += 1
         accuracy = good / (good+bad)
         return accuracy
+
 
 class Vocab:
     def __init__(self, w2i, wc):
@@ -298,6 +305,7 @@ def read_conll_pos(fname, word_column=1, tag_column=4):
 
 
 def main():
+    start = time.time()
 
     # set up our data paths
     data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
@@ -306,13 +314,16 @@ def main():
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
 
     # create a POS tagger object
-    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1)
+    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=3)
 
     # let's train it!
     pt.train()
 
     test_accuracy = pt.evaluate(pt.test_data)
     logging.info("Test accuracy: {}".format(test_accuracy))
+
+    end = time.time()
+    logging.info('elapsed time: %s s' % (end - start))
 
 
 if __name__ == '__main__':

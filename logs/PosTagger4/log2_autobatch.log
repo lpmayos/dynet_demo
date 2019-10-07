@@ -1,0 +1,27 @@
+/home/ubuntu/miniconda2/envs/env36/bin/python /home/ubuntu/hd/home/lpmayos/code/dynet_demo/POSTagger4.py --dynet-autobatch 1
+[dynet] random seed: 606453383
+[dynet] using autobatching
+[dynet] allocating memory: 512MB
+[dynet] memory allocation done.
+2019-10-07 18:21:31,413:INFO:	log_frequency: 1000
+2019-10-07 18:21:31,413:INFO:	n_epochs: 3
+2019-10-07 18:21:31,413:INFO:	learning_rate: 0.001
+2019-10-07 18:21:31,413:INFO:	batch_size: 32
+2019-10-07 18:21:31,413:INFO:	train_path: /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/en-ud-train.conllu
+2019-10-07 18:21:31,413:INFO:	dev_path: /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/en-ud-dev.conllu
+2019-10-07 18:21:31,413:INFO:	test_path: /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/en-ud-test.conllu
+2019-10-07 18:21:31,413:INFO:	n_words: 9874
+2019-10-07 18:21:31,413:INFO:	n_tags: 51
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:21:59,154:INFO:	Epoch 0 Iter 4000 Loss: 2.903661 Accuracy: 0.4526
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:22:27,100:INFO:	Epoch 0 Iter 8000 Loss: 1.549517 Accuracy: 0.7004
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:22:55,818:INFO:	Epoch 0 Iter 12000 Loss: 0.900095 Accuracy: 0.8220
+[lr=0.001 clips=142 updates=142] 2019-10-07 18:23:30,457:INFO:	Epoch 1 Iter 4000 Loss: 0.581851 Accuracy: 0.8441
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:24:02,191:INFO:	Epoch 1 Iter 8000 Loss: 0.441203 Accuracy: 0.8634
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:24:30,999:INFO:	Epoch 1 Iter 12000 Loss: 0.381367 Accuracy: 0.8743
+[lr=0.001 clips=142 updates=142] 2019-10-07 18:25:03,848:INFO:	Epoch 2 Iter 4000 Loss: 0.311460 Accuracy: 0.8788
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:25:34,452:INFO:	Epoch 2 Iter 8000 Loss: 0.286029 Accuracy: 0.8758
+[lr=0.001 clips=125 updates=125] 2019-10-07 18:26:03,409:INFO:	Epoch 2 Iter 12000 Loss: 0.269556 Accuracy: 0.8764
+2019-10-07 18:26:11,106:INFO:	Test accuracy: 0.8799856556560545
+2019-10-07 18:26:11,106:INFO:	elapsed time: 280.2957260608673 s
+
+Process finished with exit code 0
