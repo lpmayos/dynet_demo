@@ -1,16 +1,8 @@
-# Friends don’t let friends write batching code
-# Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py and https://dynet.readthedocs.io/en/latest/minibatch.html
+# Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
+# POS Tagger that allows to use a character-based bi-LSTM for unknown words
 
-# POS Tagger that concatenates word embeddings with character-level embeddings to represent words, and feeds them through a biLSTM to encode the words and generate tags
+# [word1, word2, ...] --> lookup table or char_bilstm --> we --> biLSTM  --> MLP --> tags
 
-#                       --> lookup table --> we
-# [word1, word2, ...]                                                         --> [we + we2_c] --> biLSTM --> MLP --> tags
-#                       --> lookup table --> we_c --> biLSTM   --> we2_c
-
-# NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need something with fixed size!
-import datetime
-import sys
-import time
 
 import dynet as dy
 from collections import Counter
@@ -20,11 +12,14 @@ import numpy as np
 import io
 import logging
 
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s:%(levelname)s:\t%(message)s")
+
 UNK_TOKEN = "_UNK_"
 START_TOKEN = "_START_"
 
 
-class POSTagger4:
+class POSTagger1:
     """ A POS-tagger implemented in Dynet, based on https://github.com/clab/dynet/tree/master/examples/python
     """
 
@@ -35,26 +30,19 @@ class POSTagger4:
                  log_frequency=1000,
                  n_epochs=5,
                  learning_rate=0.001,
-                 batch_size=32):
+                 use_char_lstm=False):
         """ Initialize the POS tagger.
         :param train_path: path to training data (CONLL format)
         :param dev_path: path to dev data (CONLL format)
         :param test_path: path to test data (CONLL format)
         """
-        log_filename = datetime.datetime.now().strftime("%Y%m%d.%H:%M.log")
-        log_path = f'logs/{type(self).__name__}/{log_filename}'
-        logging.basicConfig(level=logging.DEBUG,
-                            filename=log_path,
-                            format="%(asctime)s:%(levelname)s:\t%(message)s")
-        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-
         self.log_frequency = log_frequency
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
-        self.batch_size = batch_size
+        self.use_char_lstm = use_char_lstm
 
         # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger4.load_data(train_path, dev_path, test_path)
+        self.train_data, self.dev_data, self.test_data = POSTagger1.load_data(train_path, dev_path, test_path)
 
         # create vocabularies
         self.word_vocab, self.tag_vocab = self.create_vocabularies()
@@ -63,28 +51,20 @@ class POSTagger4:
         self.n_words = self.word_vocab.size()
         self.n_tags = self.tag_vocab.size()
 
-        # for character-level embeddings
-        characters = list("abcdefghijklmnopqrstuvwxyz ")
-        characters.append(UNK_TOKEN)
-        self.i2c = list(characters)
-        self.c2i = {c: i for i, c in enumerate(characters)}
-        self.nchars = len(characters)
-        self.unk_c = self.c2i[UNK_TOKEN]
-
-        self.model, self.params, self.builders, self.builders_c = self.build_model()
+        self.model, self.params, self.builders = self.build_model()
 
         self.log_parameters(train_path, dev_path, test_path)
 
     def log_parameters(self, train_path, dev_path, test_path):
-        logging.info(f'log_frequency: {self.log_frequency}')
-        logging.info(f'n_epochs: {self.n_epochs}')
-        logging.info(f'learning_rate: {self.learning_rate}')
-        logging.info(f'batch_size: {self.batch_size}')
-        logging.info(f'train_path: {train_path}')
-        logging.info(f'dev_path: {dev_path}')
-        logging.info(f'test_path: {test_path}')
-        logging.info(f'n_words: {self.n_words}')
-        logging.info(f'n_tags: {self.n_tags}')
+        logging.info('log_frequency: %s' % self.log_frequency)
+        logging.info('n_epochs: % s' % self.n_epochs)
+        logging.info('learning_rate: % s' % self.learning_rate)
+        logging.info('use_char_lstm: % s' % self.use_char_lstm)
+        logging.info('train_path: % s' % train_path)
+        logging.info('dev_path: % s' % dev_path)
+        logging.info('test_path: % s' % test_path)
+        logging.info('n_words: % s' % self.n_words)
+        logging.info('n_tags: % s' % self.n_tags)
 
     @staticmethod
     def load_data(train_path=None, dev_path=None, test_path=None):
@@ -125,59 +105,45 @@ class POSTagger4:
         model = dy.ParameterCollection()
 
         params = {}
-        word_embs_dim = 128
-        params["E"] = model.add_lookup_parameters((self.n_words, word_embs_dim))
+        params["E"] = model.add_lookup_parameters((self.n_words, 128))
 
-        # character-level embeddings
-        input_size_c = 20
-        output_size_c = 64  # hidden units
-        params["CE"] = model.add_lookup_parameters((self.nchars, input_size_c))
-        builders_c = [
-            dy.LSTMBuilder(1, input_size_c, output_size_c, model),
-            dy.LSTMBuilder(1, input_size_c, output_size_c, model)]
-
-        # input encoder
-        input_size = word_embs_dim + output_size_c * 2 # word_embedding size from lookup table + character embedding size
-        output_size = 50  # hidden units
-        builders = [
-            dy.LSTMBuilder(1, input_size, output_size, model),
-            dy.LSTMBuilder(1, input_size, output_size, model)]  # num layers, input size, hidden units, model
-
-        params["H"] = model.add_parameters((32, output_size*2))
+        params["H"] = model.add_parameters((32, 50*2))
         params["O"] = model.add_parameters((self.n_tags, 32))
 
-        return model, params, builders, builders_c
+        builders = [
+            dy.LSTMBuilder(1, 128, 50, model),
+            dy.LSTMBuilder(1, 128, 50, model)]  # 1 layer, 128 input size, 50 hidden units, model
 
-    def get_word_repr(self, w, add_noise=False):
-        """
-        """
-        if isinstance(w, str):
-            word = w
-            word_id = self.word_vocab.w2i.get(w, self.unk)
+        if self.use_char_lstm:
+            characters = list("abcdefghijklmnopqrstuvwxyz ")
+            characters.append(UNK_TOKEN)
+            self.i2c = list(characters)
+            self.c2i = {c: i for i, c in enumerate(characters)}
+            self.nchars = len(characters)
+            self.unk_c = self.c2i[UNK_TOKEN]
+
+            params["CE"] = model.add_lookup_parameters((self.nchars, 20))  # TODO how do I know if it is being updated un backward() <-- it should not, as I'm not using it in training (just for the missing words in test)
+            self.fwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
+            self.bwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
+
+        return model, params, builders
+
+    def word_repr(self, w):
+        if not self.use_char_lstm:
+            return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
         else:
-            word_id = w
-            word = self.word_vocab.i2w.get(w, self.unk)
+            if self.word_vocab.wc[w] > 1:  # TODO review min appearances to use embedding; originally 5
+                return self.params["E"][self.word_vocab.w2i.get(w, self.unk)]
+            else:
+                char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in w]
+                char_embs = [self.params["CE"][cid] for cid in char_ids]
 
-        # get word_embedding
-        w_emb = self.params["E"][word_id]
+                f_init = self.fwdRNN_chars.initial_state()
+                b_init = self.bwdRNN_chars.initial_state()
 
-        # add char-level embedding
-        char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in word]
-        char_embs = [self.params["CE"][cid] for cid in char_ids]
-
-        f_init, b_init = [b.initial_state() for b in self.builders_c]
-
-        fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
-        bw_exps = b_init.transduce(reversed(char_embs))
-        c_emb = dy.concatenate([fw_exps[-1], bw_exps[-1]])
-
-        # concatenate w_emb and c_emb
-        emb = dy.concatenate([w_emb, c_emb])
-
-        if add_noise:
-            emb = dy.noise(emb, 0.1)  # Add gaussian noise to an expression (0.1 is the standard deviation of the gaussian)
-
-        return emb
+                fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
+                bw_exps = b_init.transduce(reversed(char_embs))
+                return dy.concatenate([fw_exps[-1], bw_exps[-1]])
 
     def tag_sent(self, sent):
         """ Tags a single sentence.
@@ -186,7 +152,7 @@ class POSTagger4:
 
         f_init, b_init = [b.initial_state() for b in self.builders]
 
-        wembs = [self.get_word_repr(w) for w, t in sent]
+        wembs = [self.word_repr(w) for w, t in sent]
 
         fw = [x.output() for x in f_init.add_inputs(wembs)]
         bw = [x.output() for x in b_init.add_inputs(reversed(wembs))]
@@ -206,9 +172,12 @@ class POSTagger4:
     def build_tagging_graph(self, words, tags):
         """ Builds the graph for a single sentence.
         """
+        dy.renew_cg()
+
         f_init, b_init = [b.initial_state() for b in self.builders]
 
-        wembs = [self.get_word_repr(w, add_noise=False) for w in words]  # TODO see what happens with/without adding noise
+        wembs = [self.params["E"][w] for w in words]
+        # wembs = [dy.noise(we, 0.1) for we in wembs]  # TODO see what happens with/without adding noise
 
         # transduce takes a list of expressions, feeds them and returns a list; it is equivalent to:
         fw = f_init.transduce(wembs)            # fw = [x.output() for x in f_init.add_inputs(wembs)]
@@ -225,47 +194,36 @@ class POSTagger4:
             errs.append(err)
         return dy.esum(errs)
 
-    def get_minibatches(self, n):
-        """ returns batches of data of size self.batch_size
-        """
-        random.shuffle(self.train_data)
-        l = len(self.train_data)
-        for ndx in range(0, l, n):
-            yield self.train_data[ndx:min(ndx + n, l)]
-
     def train(self):
         """ Training loop.
         """
         trainer = dy.AdamTrainer(self.model, alpha=self.learning_rate)
         tagged = 0
         loss = 0
-        for epoch in range(self.n_epochs):
-            i = 0
-            for minibatch in self.get_minibatches(self.batch_size):
-                dy.renew_cg()
-                losses = []
+
+        for EPOCH in range(self.n_epochs):
+            random.shuffle(self.train_data)
+            for i, s in enumerate(self.train_data, 1):
 
                 # print loss
-                if i > 0 and i % self.log_frequency == 0:
-                    trainer.status()
+                if i % self.log_frequency == 0:
+                    # trainer.status()
                     accuracy = self.evaluate(self.dev_data)
-                    logging.info("Epoch {} Iter {} Loss: {:1.6f} Accuracy: {:1.4f}".format(epoch, i, loss / tagged, accuracy))
+                    logging.info("Epoch {} Iter {} Loss: {:1.6f} Accuracy: {:1.4f}".format(
+                        EPOCH, i, loss / tagged, accuracy))
                     loss = 0
                     tagged = 0
 
-                for sample in minibatch:
+                # get loss for this training example
+                words = [self.word_vocab.w2i.get(word, self.unk) for word, _ in s]
+                tags = [self.tag_vocab.w2i[tag] for _, tag in s]
 
-                    words = [self.word_vocab.w2i.get(word, self.unk) for word, _ in sample]
-                    tags = [self.tag_vocab.w2i[tag] for _, tag in sample]
-                    sample_loss = self.build_tagging_graph(words, tags)
-                    losses.append(sample_loss)
-                    i += 1
-                    loss += sample_loss.scalar_value()
-                    tagged += len(tags)
+                sum_errs = self.build_tagging_graph(words, tags)
+                loss += sum_errs.scalar_value()
+                tagged += len(tags)
 
-                minibatch_loss = dy.esum(losses)
-                # minibatch_loss.forward()  # TODO is this necessary? I think it is done in build_tagging_graph
-                minibatch_loss.backward()
+                # update parameters
+                sum_errs.backward()
                 trainer.update()
 
     def evaluate(self, eval_data):
@@ -323,8 +281,6 @@ def read_conll_pos(fname, word_column=1, tag_column=4):
 
 def main():
 
-    start = time.time()
-
     # set up our data paths
     data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
     train_path = os.path.join(data_dir, "en-ud-train.conllu")
@@ -332,16 +288,13 @@ def main():
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
 
     # create a POS tagger object
-    pt = POSTagger4(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=3, batch_size=32)
+    pt = POSTagger1(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1, use_char_lstm=True)
 
     # let's train it!
     pt.train()
 
     test_accuracy = pt.evaluate(pt.test_data)
-    logging.info(f"Test accuracy: {test_accuracy}")
-
-    end = time.time()
-    logging.info(f'elapsed time: {end - start}')
+    logging.info("Test accuracy: {}".format(test_accuracy))
 
 
 if __name__ == '__main__':

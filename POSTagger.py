@@ -1,19 +1,5 @@
-# Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py
-# POS Tagger that allows to use a character-based bi-LSTM for unknown words
-
-# [word1, word2, ...] --> lookup table or char_bilstm --> we --> biLSTM  --> MLP --> tags
-
-
-import dynet as dy
-from collections import Counter
-import random
-import os
-import numpy as np
-import io
+import datetime
 import logging
-
-logging.basicConfig(level=logging.DEBUG,
-                    format="%(asctime)s:%(levelname)s:\t%(message)s")
 
 UNK_TOKEN = "_UNK_"
 START_TOKEN = "_START_"
@@ -42,7 +28,7 @@ class POSTagger:
         self.use_char_lstm = use_char_lstm
 
         # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger.load_data(train_path, dev_path, test_path)
+        self.train_data, self.dev_data, self.test_data = POSTagger1.load_data(train_path, dev_path, test_path)
 
         # create vocabularies
         self.word_vocab, self.tag_vocab = self.create_vocabularies()
@@ -54,6 +40,14 @@ class POSTagger:
         self.model, self.params, self.builders = self.build_model()
 
         self.log_parameters(train_path, dev_path, test_path)
+
+    def config_logger(self):
+        log_filename = datetime.datetime.now().strftime("%Y%m%d.%H:%M.log")
+        log_path = f'logs/{type(self).__name__}/{log_filename}'
+        logging.basicConfig(level=logging.DEBUG,
+                            filename=log_path,
+                            format="%(asctime)s:%(levelname)s:\t%(message)s")
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     def log_parameters(self, train_path, dev_path, test_path):
         logging.info('log_frequency: %s' % self.log_frequency)
