@@ -24,7 +24,7 @@ UNK_TOKEN = "_UNK_"
 START_TOKEN = "_START_"
 
 
-class POSTagger4:
+class POSTagger3:
     """ A POS-tagger implemented in Dynet, based on https://github.com/clab/dynet/tree/master/examples/python
     """
 
@@ -41,12 +41,6 @@ class POSTagger4:
         :param dev_path: path to dev data (CONLL format)
         :param test_path: path to test data (CONLL format)
         """
-        log_filename = datetime.datetime.now().strftime("%Y%m%d.%H:%M.log")
-        log_path = f'logs/{type(self).__name__}/{log_filename}'
-        logging.basicConfig(level=logging.DEBUG,
-                            filename=log_path,
-                            format="%(asctime)s:%(levelname)s:\t%(message)s")
-        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
         self.log_frequency = log_frequency
         self.n_epochs = n_epochs
@@ -54,7 +48,7 @@ class POSTagger4:
         self.batch_size = batch_size
 
         # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger4.load_data(train_path, dev_path, test_path)
+        self.train_data, self.dev_data, self.test_data = POSTagger3.load_data(train_path, dev_path, test_path)
 
         # create vocabularies
         self.word_vocab, self.tag_vocab = self.create_vocabularies()
@@ -206,6 +200,7 @@ class POSTagger4:
     def build_tagging_graph(self, words, tags):
         """ Builds the graph for a single sentence.
         """
+
         f_init, b_init = [b.initial_state() for b in self.builders]
 
         wembs = [self.get_word_repr(w, add_noise=False) for w in words]  # TODO see what happens with/without adding noise
@@ -332,7 +327,7 @@ def main():
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
 
     # create a POS tagger object
-    pt = POSTagger4(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=3, batch_size=32)
+    pt = POSTagger3(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=3, batch_size=32)
 
     # let's train it!
     pt.train()
