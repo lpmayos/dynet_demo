@@ -1,67 +1,34 @@
+import os
 import dynet as dy
 import random
+import time
 import logging
 from POSTagger2 import POSTagger2
 
 
 class POSTagger3(POSTagger2):
     """
-    # Based on: https://github.com/neubig/lxmls-2017/blob/master/postagger.py and https://dynet.readthedocs.io/en/latest/minibatch.html
+    POSTagger3 concatenates word embeddings with character-level embeddings to represent words, and feeds them through a
+    biLSTM to encode the words and generate tags. It allows minibatching.
 
-    # POS Tagger that concatenates word embeddings with character-level embeddings to represent words, and feeds them through a biLSTM to encode the words and generate tags
+                          --> lookup table --> we
+    [word1, word2, ...]                                                       --> [we + we2_c] --> biLSTM --> MLP --> tags
+                          --> lookup table --> we_c --> biLSTM   --> we2_c
 
-    #                       --> lookup table --> we
-    # [word1, word2, ...]                                                         --> [we + we2_c] --> biLSTM --> MLP --> tags
-    #                       --> lookup table --> we_c --> biLSTM   --> we2_c
-
-    # NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need something with fixed size!
-
+    NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need
+    something with fixed size!
     """
 
-    def __init__(self,
-                 train_path="train.conll",
-                 dev_path="dev.conll",
-                 test_path="test.conll",
-                 log_frequency=1000,
-                 n_epochs=5,
-                 learning_rate=0.001,
-                 batch_size=32):
-        """ Initialize the POS tagger.
-        :param train_path: path to training data (CONLL format)
-        :param dev_path: path to dev data (CONLL format)
-        :param test_path: path to test data (CONLL format)
-        """
+    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001, batch_size=32):
 
-        self.log_frequency = log_frequency
-        self.n_epochs = n_epochs
-        self.learning_rate = learning_rate
         self.batch_size = batch_size
 
-        # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger3.load_data(train_path, dev_path, test_path)
+        POSTagger2.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
 
-        # create vocabularies
-        self.word_vocab, self.tag_vocab = self.create_vocabularies()
-
-        self.unk = self.word_vocab.w2i[UNK_TOKEN]
-        self.n_words = self.word_vocab.size()
-        self.n_tags = self.tag_vocab.size()
-
-        # for character-level embeddings
-        characters = list("abcdefghijklmnopqrstuvwxyz ")
-        characters.append(UNK_TOKEN)
-        self.i2c = list(characters)
-        self.c2i = {c: i for i, c in enumerate(characters)}
-        self.nchars = len(characters)
-        self.unk_c = self.c2i[UNK_TOKEN]
-
-        self.model, self.params, self.builders, self.builders_c = self.build_model()
-
-        self.log_parameters(train_path, dev_path, test_path)
-
-    def log_parameters(self, train_path, dev_path, test_path):
-        POSTagger.log_parameters(train_path, dev_path, test_path)
+    def log_parameters(self):
+        POSTagger2.log_parameters(self)
         logging.info('batch_size: % s' % self.batch_size)
+        logging.info('\n\n')
 
     def _get_minibatches(self, n):
         """ returns batches of data of size self.batch_size
@@ -105,3 +72,34 @@ class POSTagger3(POSTagger2):
                 # minibatch_loss.forward()  # TODO is this necessary? I think it is done in build_tagging_graph
                 minibatch_loss.backward()
                 trainer.update()
+
+
+def main():
+
+    # set up our data paths
+    # data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
+    data_dir = "data/"
+    train_path = os.path.join(data_dir, "en-ud-train.conllu")
+    dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
+    test_path = os.path.join(data_dir, "en-ud-test.conllu")
+
+    batch_size = 32
+    log_frequency = round(1000 / batch_size)
+
+    # create a POS tagger object
+    pt = POSTagger3(train_path=train_path, dev_path=dev_path, test_path=test_path, log_frequency=log_frequency, n_epochs=3, batch_size=batch_size)
+    pt.log_parameters()
+
+    # let's train it!
+    pt.train()
+
+    test_accuracy = pt.evaluate(pt.test_data)
+    logging.info("Test accuracy: {}".format(test_accuracy))
+
+
+if __name__ == '__main__':
+
+    start = time.process_time()
+    main()
+    logging.info("Elapsed time: {}".format(time.process_time() - start))
+

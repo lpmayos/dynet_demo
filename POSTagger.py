@@ -1,7 +1,7 @@
+import sys
 import dynet as dy
 from collections import Counter
 import random
-import os
 import numpy as np
 import io
 import logging
@@ -15,22 +15,20 @@ class POSTagger:
     """ A POS-tagger implemented in Dynet, based on https://github.com/clab/dynet/tree/master/examples/python
     """
 
-    def __init__(self,
-                 train_path="train.conll",
-                 dev_path="dev.conll",
-                 test_path="test.conll",
-                 log_frequency=1000,
-                 n_epochs=5,
-                 learning_rate=0.001):
+    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
 
         self.config_logger()
+
+        self.train_path = train_path
+        self.dev_path = dev_path
+        self.test_path = test_path
 
         self.log_frequency = log_frequency
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
 
         # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger1.load_data(train_path, dev_path, test_path)
+        self.train_data, self.dev_data, self.test_data = self.load_data(train_path, dev_path, test_path)
 
         # create vocabularies
         self.word_vocab, self.tag_vocab = self.create_vocabularies()
@@ -39,7 +37,7 @@ class POSTagger:
         self.n_words = self.word_vocab.size()
         self.n_tags = self.tag_vocab.size()
 
-        self.model, self.params, self.builders = self.build_model()
+        self.build_model()
 
     def config_logger(self):
         log_filename = datetime.datetime.now().strftime("%Y%m%d.%H:%M.log")
@@ -49,14 +47,13 @@ class POSTagger:
                             format="%(asctime)s:%(levelname)s:\t%(message)s")
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-    def log_parameters(self, train_path, dev_path, test_path):
+    def log_parameters(self):
         logging.info('log_frequency: %s' % self.log_frequency)
         logging.info('n_epochs: % s' % self.n_epochs)
         logging.info('learning_rate: % s' % self.learning_rate)
-        logging.info('use_char_lstm: % s' % self.use_char_lstm)
-        logging.info('train_path: % s' % train_path)
-        logging.info('dev_path: % s' % dev_path)
-        logging.info('test_path: % s' % test_path)
+        logging.info('train_path: % s' % self.train_path)
+        logging.info('dev_path: % s' % self.dev_path)
+        logging.info('test_path: % s' % self.test_path)
         logging.info('n_words: % s' % self.n_words)
         logging.info('n_tags: % s' % self.n_tags)
 
@@ -110,7 +107,7 @@ class POSTagger:
 
         f_init, b_init = [b.initial_state() for b in self.builders]
 
-        wembs = [self.word_repr(w) for w, t in sent]
+        wembs = [self.get_word_repr(w) for w, t in sent]
 
         fw = [x.output() for x in f_init.add_inputs(wembs)]
         bw = [x.output() for x in b_init.add_inputs(reversed(wembs))]
@@ -235,26 +232,3 @@ def read_conll_pos(fname, word_column=1, tag_column=4):
                 word = line[word_column]
                 tag = line[tag_column]
                 sent.append((word, tag))
-
-
-def main():
-
-    # set up our data paths
-    # data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
-    data_dir = "data/"
-    train_path = os.path.join(data_dir, "en-ud-train.conllu")
-    dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
-    test_path = os.path.join(data_dir, "en-ud-test.conllu")
-
-    # create a POS tagger object
-    pt = POSTagger(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1, use_char_lstm=True)
-
-    # let's train it!
-    pt.train()
-
-    test_accuracy = pt.evaluate(pt.test_data)
-    logging.info("Test accuracy: {}".format(test_accuracy))
-
-
-if __name__ == '__main__':
-    main()

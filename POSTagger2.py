@@ -1,54 +1,32 @@
+import logging
+import os
+import time
 import dynet as dy
-from POSTagger import POSTagger
+from POSTagger import POSTagger, UNK_TOKEN
 
 
 class POSTagger2(POSTagger):
     """
-    # POS Tagger that concatenates word embeddings with character-level embeddings to represent words, and feeds them through a biLSTM to encode the words and generate tags
+    POSTagger2 concatenates word embeddings with character-level embeddings to represent words, and feeds them through a
+    biLSTM to encode the words and generate tags.
 
-    # NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need something with fixed size!
-    # NOTICE how each sequence has a different length, but its OK, the LstmAcceptor doesn’t care. We create a new graph for each example, at exactly the desired length.
-    #       --> in POSTagger4, we add mini-batching support
+    NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need
+    something with fixed size!
+    NOTICE how each sequence has a different length, but its OK, the LstmAcceptor doesn’t care. We create a new graph
+    for each example, at exactly the desired length.
+
+                          --> lookup table --> we
+    [word1, word2, ...]                                                       --> [we + we2_c] --> biLSTM --> MLP --> tags
+                          --> lookup table --> we_c --> biLSTM   --> we2_c
 
 
-    #                       --> lookup table --> we
-    # [word1, word2, ...]                                                         --> [we + we2_c] --> biLSTM --> MLP --> tags
-    #                       --> lookup table --> we_c --> biLSTM   --> we2_c
-
-
-    # TODO implement this option?
-    #                       --> lookup table --> we     --> biLSTM  --> we2
-    # [word1, word2, ...]                                                       --> [we + we2_c] --> MLP --> tags
-    #                       --> lookup table --> we_c   --> biLSTM  --> we2_c
-
+    TODO implement this option?
+                          --> lookup table --> we     --> biLSTM  --> we2
+    [word1, word2, ...]                                                       --> [we + we2_c] --> MLP --> tags
+                          --> lookup table --> we_c   --> biLSTM  --> we2_c
     """
 
-
-    def __init__(self,
-                 train_path="train.conll",
-                 dev_path="dev.conll",
-                 test_path="test.conll",
-                 log_frequency=1000,
-                 n_epochs=5,
-                 learning_rate=0.001):
-        """ Initialize the POS tagger.
-        :param train_path: path to training data (CONLL format)
-        :param dev_path: path to dev data (CONLL format)
-        :param test_path: path to test data (CONLL format)
-        """
-        self.log_frequency = log_frequency
-        self.n_epochs = n_epochs
-        self.learning_rate = learning_rate
-
-        # load data
-        self.train_data, self.dev_data, self.test_data = POSTagger2.load_data(train_path, dev_path, test_path)
-
-        # create vocabularies
-        self.word_vocab, self.tag_vocab = self.create_vocabularies()
-
-        self.unk = self.word_vocab.w2i[UNK_TOKEN]
-        self.n_words = self.word_vocab.size()
-        self.n_tags = self.tag_vocab.size()
+    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
 
         # for character-level embeddings
         characters = list("abcdefghijklmnopqrstuvwxyz ")
@@ -58,10 +36,7 @@ class POSTagger2(POSTagger):
         self.nchars = len(characters)
         self.unk_c = self.c2i[UNK_TOKEN]
 
-        self.model, self.params, self.builders, self.builders_c = self.build_model()
-
-        self.log_parameters(train_path, dev_path, test_path)
-
+        POSTagger.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
 
     def build_model(self):
         """ This builds our POS-tagger model.
@@ -90,7 +65,10 @@ class POSTagger2(POSTagger):
         params["H"] = model.add_parameters((32, output_size*2))
         params["O"] = model.add_parameters((self.n_tags, 32))
 
-        return model, params, builders, builders_c
+        self.model = model
+        self.params = params
+        self.builders = builders
+        self.builders_c = builders_c
 
     def get_word_repr(self, w, add_noise=False):
         """
@@ -122,3 +100,30 @@ class POSTagger2(POSTagger):
             emb = dy.noise(emb, 0.1)  # Add gaussian noise to an expression (0.1 is the standard deviation of the gaussian)
 
         return emb
+
+
+def main():
+
+    # set up our data paths
+    # data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
+    data_dir = "data/"
+    train_path = os.path.join(data_dir, "en-ud-train.conllu")
+    dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
+    test_path = os.path.join(data_dir, "en-ud-test.conllu")
+
+    # create a POS tagger object
+    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=3)
+    pt.log_parameters()
+
+    # let's train it!
+    pt.train()
+
+    test_accuracy = pt.evaluate(pt.test_data)
+    logging.info("Test accuracy: {}".format(test_accuracy))
+
+
+if __name__ == '__main__':
+
+    start = time.process_time()
+    main()
+    logging.info("Elapsed time: {}".format(time.process_time() - start))
