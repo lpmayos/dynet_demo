@@ -8,10 +8,9 @@ import logging
 import datetime
 
 UNK_TOKEN = "_UNK_"
-START_TOKEN = "_START_"
 
 
-class POSTagger:
+class POSTaggerBase:
     """ A POS-tagger implemented in Dynet, based on https://github.com/clab/dynet/tree/master/examples/python
     """
 
@@ -78,12 +77,11 @@ class POSTagger:
                 words.append(word)
                 tags.append(tag)
                 counter[word] += 1
-        words.append(UNK_TOKEN)
 
         # replace frequency 1 words with unknown word token
         words = [w if counter[w] > 1 else UNK_TOKEN for w in words]
 
-        tags.append(START_TOKEN)
+        words.append(UNK_TOKEN)
 
         word_vocab = Vocab.from_corpus([words])
         tag_vocab = Vocab.from_corpus([tags])
@@ -117,6 +115,8 @@ class POSTagger:
 
         tags = []
         for f, b, (w, t) in zip(fw, reversed(bw), sent):
+            # dense layer: dy.tanh(H * dy.concatenate([f, b]))
+            # output layer: O (maps from H_dim --> output dimension)
             r_t = O * (dy.tanh(H * dy.concatenate([f, b])))
             out = dy.softmax(r_t)
             chosen = np.argmax(out.npvalue())
@@ -197,6 +197,7 @@ class POSTagger:
         return accuracy
 
 
+# TODO check if dynet has vocab already implemented (i.e. TF tokenizer: https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/text/Tokenizer)
 class Vocab:
     def __init__(self, w2i, wc):
         self.w2i = dict(w2i)

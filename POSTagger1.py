@@ -1,10 +1,10 @@
 import os
 import dynet as dy
 import logging
-from POSTagger import POSTagger, UNK_TOKEN
+from POSTaggerBase import POSTaggerBase, UNK_TOKEN
 
 
-class POSTagger1(POSTagger):
+class POSTagger1(POSTaggerBase):
     """
     POSTagger1 allows to use a character-based bi-LSTM for unknown words:
 
@@ -23,10 +23,10 @@ class POSTagger1(POSTagger):
             self.nchars = len(characters)
             self.unk_c = self.c2i[UNK_TOKEN]
 
-        POSTagger.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
+        POSTaggerBase.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
 
     def log_parameters(self):
-        POSTagger.log_parameters(self)
+        POSTaggerBase.log_parameters(self)
         logging.info('use_char_lstm: % s' % self.use_char_lstm)
         logging.info('\n\n')
 

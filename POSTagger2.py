@@ -2,10 +2,10 @@ import logging
 import os
 import time
 import dynet as dy
-from POSTagger import POSTagger, UNK_TOKEN
+from POSTaggerBase import POSTaggerBase, UNK_TOKEN
 
 
-class POSTagger2(POSTagger):
+class POSTagger2(POSTaggerBase):
     """
     POSTagger2 concatenates word embeddings with character-level embeddings to represent words, and feeds them through a
     biLSTM to encode the words and generate tags.
@@ -36,7 +36,7 @@ class POSTagger2(POSTagger):
         self.nchars = len(characters)
         self.unk_c = self.c2i[UNK_TOKEN]
 
-        POSTagger.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
+        POSTaggerBase.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
 
     def build_model(self):
         """ This builds our POS-tagger model.
@@ -56,7 +56,7 @@ class POSTagger2(POSTagger):
             dy.LSTMBuilder(1, input_size_c, output_size_c, model)]
 
         # input encoder
-        input_size = word_embs_dim + output_size_c * 2 # word_embedding size from lookup table + character embedding size
+        input_size = word_embs_dim + output_size_c * 2  # word_embedding size from lookup table + character embedding size
         output_size = 50  # hidden units
         builders = [
             dy.LSTMBuilder(1, input_size, output_size, model),
@@ -112,7 +112,7 @@ def main():
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
 
     # create a POS tagger object
-    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=3)
+    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=5)
     pt.log_parameters()
 
     # let's train it!

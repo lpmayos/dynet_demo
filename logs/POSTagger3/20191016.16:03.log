@@ -1,0 +1,19 @@
+2019-10-16 16:03:34,634:INFO:	log_frequency: 1000
+2019-10-16 16:03:34,634:INFO:	n_epochs: 5
+2019-10-16 16:03:34,634:INFO:	learning_rate: 0.001
+2019-10-16 16:03:34,634:INFO:	train_path: data/en-ud-train.conllu
+2019-10-16 16:03:34,634:INFO:	dev_path: data/en-ud-dev.conllu
+2019-10-16 16:03:34,634:INFO:	test_path: data/en-ud-test.conllu
+2019-10-16 16:03:34,634:INFO:	n_words: 9874
+2019-10-16 16:03:34,634:INFO:	n_tags: 50
+2019-10-16 16:03:34,634:INFO:	batch_size: 64
+2019-10-16 16:03:34,634:INFO:	
+
+
+2019-10-16 16:04:22,644:INFO:	Epoch 0 Iter 8000 Loss: 2.682665 Accuracy: 0.5406
+2019-10-16 16:05:34,210:INFO:	Epoch 1 Iter 8000 Loss: 1.015122 Accuracy: 0.8451
+2019-10-16 16:06:46,286:INFO:	Epoch 2 Iter 8000 Loss: 0.447160 Accuracy: 0.8887
+2019-10-16 16:08:00,994:INFO:	Epoch 3 Iter 8000 Loss: 0.309713 Accuracy: 0.8957
+2019-10-16 16:09:15,219:INFO:	Epoch 4 Iter 8000 Loss: 0.252272 Accuracy: 0.9032
+2019-10-16 16:09:44,642:INFO:	Test accuracy: 0.9099095509423437
+2019-10-16 16:09:44,660:INFO:	Elapsed time: 370.608344488

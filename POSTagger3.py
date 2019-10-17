@@ -9,7 +9,9 @@ from POSTagger2 import POSTagger2
 class POSTagger3(POSTagger2):
     """
     POSTagger3 concatenates word embeddings with character-level embeddings to represent words, and feeds them through a
-    biLSTM to encode the words and generate tags. It allows minibatching.
+    biLSTM to encode the words and generate tags. It allows minibatching
+
+    IMPORTANT!! activate autobatching with --dynet-autobatch 1
 
                           --> lookup table --> we
     [word1, word2, ...]                                                       --> [we + we2_c] --> biLSTM --> MLP --> tags
@@ -51,7 +53,7 @@ class POSTagger3(POSTagger2):
                 losses = []
 
                 # print loss
-                if i > 0 and i % self.log_frequency == 0:
+                if i > self.batch_size >= i % self.log_frequency:
                     trainer.status()
                     accuracy = self.evaluate(self.dev_data)
                     logging.info("Epoch {} Iter {} Loss: {:1.6f} Accuracy: {:1.4f}".format(epoch, i, loss / tagged, accuracy))
@@ -84,10 +86,11 @@ def main():
     test_path = os.path.join(data_dir, "en-ud-test.conllu")
 
     batch_size = 32
-    log_frequency = round(1000 / batch_size)
+    # log_frequency = round(1000 / batch_size)
+    log_frequency = 1000
 
     # create a POS tagger object
-    pt = POSTagger3(train_path=train_path, dev_path=dev_path, test_path=test_path, log_frequency=log_frequency, n_epochs=3, batch_size=batch_size)
+    pt = POSTagger3(train_path=train_path, dev_path=dev_path, test_path=test_path, log_frequency=log_frequency, n_epochs=5, batch_size=batch_size)
     pt.log_parameters()
 
     # let's train it!
