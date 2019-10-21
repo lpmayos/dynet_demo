@@ -14,13 +14,16 @@ class POSTaggerBase:
     """ A POS-tagger implemented in Dynet, based on https://github.com/clab/dynet/tree/master/examples/python
     """
 
-    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
+    def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
 
+        self.log_path = log_path
         self.config_logger()
 
         self.train_path = train_path
         self.dev_path = dev_path
         self.test_path = test_path
+
+        self.log_path = log_path
 
         self.log_frequency = log_frequency
         self.n_epochs = n_epochs
@@ -39,10 +42,8 @@ class POSTaggerBase:
         self.build_model()
 
     def config_logger(self):
-        log_filename = datetime.datetime.now().strftime("%Y%m%d.%H:%M.log")
-        log_path = f'logs/{type(self).__name__}/{log_filename}'
         logging.basicConfig(level=logging.DEBUG,
-                            filename=log_path,
+                            filename=self.log_path,
                             format="%(asctime)s:%(levelname)s:\t%(message)s")
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
@@ -195,6 +196,12 @@ class POSTaggerBase:
                     bad += 1
         accuracy = good / (good+bad)
         return accuracy
+
+    def save_model(self, model_path):
+        self.model.save(model_path)
+
+    def load_model(self, model_path):
+        self.model.populate(model_path)
 
 
 # TODO check if dynet has vocab already implemented (i.e. TF tokenizer: https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/text/Tokenizer)

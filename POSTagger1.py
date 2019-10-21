@@ -11,7 +11,7 @@ class POSTagger1(POSTaggerBase):
         [word1, word2, ...] --> lookup table or char_bilstm --> we --> biLSTM  --> MLP --> tags
     """
 
-    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001, use_char_lstm=False):
+    def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001, use_char_lstm=False):
 
         self.use_char_lstm = use_char_lstm
 
@@ -23,7 +23,7 @@ class POSTagger1(POSTaggerBase):
             self.nchars = len(characters)
             self.unk_c = self.c2i[UNK_TOKEN]
 
-        POSTaggerBase.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
+        POSTaggerBase.__init__(self, train_path, dev_path, test_path, log_path, log_frequency, n_epochs, learning_rate)
 
     def log_parameters(self):
         POSTaggerBase.log_parameters(self)

@@ -26,7 +26,7 @@ class POSTagger2(POSTaggerBase):
                           --> lookup table --> we_c   --> biLSTM  --> we2_c
     """
 
-    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
+    def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
 
         # for character-level embeddings
         characters = list("abcdefghijklmnopqrstuvwxyz ")
@@ -36,7 +36,7 @@ class POSTagger2(POSTaggerBase):
         self.nchars = len(characters)
         self.unk_c = self.c2i[UNK_TOKEN]
 
-        POSTaggerBase.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
+        POSTaggerBase.__init__(self, train_path, dev_path, test_path, log_path, log_frequency, n_epochs, learning_rate)
 
     def build_model(self):
         """ This builds our POS-tagger model.
@@ -100,30 +100,3 @@ class POSTagger2(POSTaggerBase):
             emb = dy.noise(emb, 0.1)  # Add gaussian noise to an expression (0.1 is the standard deviation of the gaussian)
 
         return emb
-
-
-def main():
-
-    # set up our data paths
-    # data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
-    data_dir = "data/"
-    train_path = os.path.join(data_dir, "en-ud-train.conllu")
-    dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
-    test_path = os.path.join(data_dir, "en-ud-test.conllu")
-
-    # create a POS tagger object
-    pt = POSTagger2(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=5)
-    pt.log_parameters()
-
-    # let's train it!
-    pt.train()
-
-    test_accuracy = pt.evaluate(pt.test_data)
-    logging.info("Test accuracy: {}".format(test_accuracy))
-
-
-if __name__ == '__main__':
-
-    start = time.process_time()
-    main()
-    logging.info("Elapsed time: {}".format(time.process_time() - start))

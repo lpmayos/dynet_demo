@@ -21,11 +21,11 @@ class POSTagger3(POSTagger2):
     something with fixed size!
     """
 
-    def __init__(self, train_path, dev_path, test_path, log_frequency=1000, n_epochs=5, learning_rate=0.001, batch_size=32):
+    def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001, batch_size=32):
 
         self.batch_size = batch_size
 
-        POSTagger2.__init__(self, train_path, dev_path, test_path, log_frequency, n_epochs, learning_rate)
+        POSTagger2.__init__(self, train_path, dev_path, test_path, log_path, log_frequency, n_epochs, learning_rate)
 
     def log_parameters(self):
         POSTagger2.log_parameters(self)
@@ -74,35 +74,3 @@ class POSTagger3(POSTagger2):
                 # minibatch_loss.forward()  # TODO is this necessary? I think it is done in build_tagging_graph
                 minibatch_loss.backward()
                 trainer.update()
-
-
-def main():
-
-    # set up our data paths
-    # data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
-    data_dir = "data/"
-    train_path = os.path.join(data_dir, "en-ud-train.conllu")
-    dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
-    test_path = os.path.join(data_dir, "en-ud-test.conllu")
-
-    batch_size = 32
-    # log_frequency = round(1000 / batch_size)
-    log_frequency = 1000
-
-    # create a POS tagger object
-    pt = POSTagger3(train_path=train_path, dev_path=dev_path, test_path=test_path, log_frequency=log_frequency, n_epochs=5, batch_size=batch_size)
-    pt.log_parameters()
-
-    # let's train it!
-    pt.train()
-
-    test_accuracy = pt.evaluate(pt.test_data)
-    logging.info("Test accuracy: {}".format(test_accuracy))
-
-
-if __name__ == '__main__':
-
-    start = time.process_time()
-    main()
-    logging.info("Elapsed time: {}".format(time.process_time() - start))
-
