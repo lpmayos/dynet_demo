@@ -1,6 +1,3 @@
-import logging
-import os
-import time
 import dynet as dy
 from POSTaggerBase import POSTaggerBase, UNK_TOKEN
 

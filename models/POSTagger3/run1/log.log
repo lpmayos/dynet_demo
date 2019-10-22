@@ -1,0 +1,43 @@
+2019-10-22 12:18:29,994:INFO:	log_frequency: 1000
+2019-10-22 12:18:29,994:INFO:	n_epochs: 1
+2019-10-22 12:18:29,994:INFO:	learning_rate: 0.001
+2019-10-22 12:18:29,995:INFO:	train_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-train.conllu
+2019-10-22 12:18:29,995:INFO:	dev_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-dev.conllu
+2019-10-22 12:18:29,995:INFO:	test_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-test.conllu
+2019-10-22 12:18:29,995:INFO:	n_words: 9874
+2019-10-22 12:18:29,995:INFO:	n_tags: 50
+2019-10-22 12:18:29,995:INFO:	batch_size: 32
+2019-10-22 12:18:29,995:INFO:	
+
+
+2019-10-22 12:18:41,189:INFO:	Epoch 0 Iter 1024 Loss: 3.510500 Accuracy: 0.1665
+2019-10-22 12:18:51,441:INFO:	Epoch 0 Iter 2016 Loss: 2.930531 Accuracy: 0.2855
+2019-10-22 12:19:01,380:INFO:	Epoch 0 Iter 3008 Loss: 2.575879 Accuracy: 0.4058
+2019-10-22 12:19:12,147:INFO:	Epoch 0 Iter 4000 Loss: 2.182487 Accuracy: 0.4569
+2019-10-22 12:19:17,725:INFO:	Epoch 0 Iter 4032 Loss: 2.003841 Accuracy: 0.4598
+2019-10-22 12:19:28,132:INFO:	Epoch 0 Iter 5024 Loss: 1.864465 Accuracy: 0.5484
+2019-10-22 12:19:38,215:INFO:	Epoch 0 Iter 6016 Loss: 1.574025 Accuracy: 0.6196
+2019-10-22 12:19:47,785:INFO:	Epoch 0 Iter 7008 Loss: 1.339401 Accuracy: 0.6826
+2019-10-22 12:19:56,982:INFO:	Epoch 0 Iter 8000 Loss: 1.167177 Accuracy: 0.7220
+2019-10-22 12:20:01,600:INFO:	Epoch 0 Iter 8032 Loss: 1.071190 Accuracy: 0.7242
+2019-10-22 12:20:10,598:INFO:	Epoch 0 Iter 9024 Loss: 1.020419 Accuracy: 0.7528
+2019-10-22 12:20:19,963:INFO:	Epoch 0 Iter 10016 Loss: 0.873585 Accuracy: 0.7852
+2019-10-22 12:20:29,408:INFO:	Epoch 0 Iter 11008 Loss: 0.800536 Accuracy: 0.8147
+2019-10-22 12:20:38,669:INFO:	Epoch 0 Iter 12000 Loss: 0.713586 Accuracy: 0.8228
+2019-10-22 12:20:42,893:INFO:	Epoch 0 Iter 12032 Loss: 0.823295 Accuracy: 0.8223
+2019-10-22 12:20:50,635:INFO:	Test accuracy: 0.837351077818066
+2019-10-22 12:20:50,654:INFO:	Elapsed time: 141.230894219
+2019-10-22 12:23:54,232:INFO:	log_frequency: 1000
+2019-10-22 12:23:54,233:INFO:	n_epochs: 1
+2019-10-22 12:23:54,233:INFO:	learning_rate: 0.001
+2019-10-22 12:23:54,233:INFO:	train_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-train.conllu
+2019-10-22 12:23:54,233:INFO:	dev_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-dev.conllu
+2019-10-22 12:23:54,233:INFO:	test_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-test.conllu
+2019-10-22 12:23:54,233:INFO:	n_words: 9874
+2019-10-22 12:23:54,233:INFO:	n_tags: 50
+2019-10-22 12:23:54,233:INFO:	batch_size: 32
+2019-10-22 12:23:54,233:INFO:	
+
+
+2019-10-22 12:23:58,634:INFO:	Test accuracy: 0.837351077818066
+2019-10-22 12:23:58,649:INFO:	Elapsed time: 4.940240038

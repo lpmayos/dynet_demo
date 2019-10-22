@@ -33,6 +33,8 @@ def main(config):
         batch_size = config['batch_size']
         pt = POSTagger3(train_path=train_path, dev_path=dev_path, test_path=test_path, log_path=log_path, n_epochs=config['n_epochs'], batch_size=batch_size)
 
+    logging.info('----------------------------------------------------------------------------------------------------')
+
     pt.log_parameters()
 
     # let's train it!
@@ -43,8 +45,10 @@ def main(config):
         pt.load_model(model_path)
 
     test_accuracy = pt.evaluate(pt.test_data)  # TODO save results
+    logging.info('')
     logging.info("Test accuracy: {}".format(test_accuracy))
 
+    logging.info('----------------------------------------------------------------------------------------------------\n\n')
 
 if __name__ == '__main__':
 
@@ -56,7 +60,7 @@ if __name__ == '__main__':
 
     with open(arguments.config_file, encoding="UTF-8") as config_file:
         config = json.load(config_file)
-        # we'll save the model data in the same folder as config.json
+        # we'll save the model data in the same folder as configiguration json file
         config['model_dir'] = os.path.dirname(config_file.name)
 
     start = time.process_time()

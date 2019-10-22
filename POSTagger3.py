@@ -1,7 +1,5 @@
-import os
 import dynet as dy
 import random
-import time
 import logging
 from POSTagger2 import POSTagger2
 
@@ -30,7 +28,6 @@ class POSTagger3(POSTagger2):
     def log_parameters(self):
         POSTagger2.log_parameters(self)
         logging.info('batch_size: % s' % self.batch_size)
-        logging.info('\n\n')
 
     def _get_minibatches(self, n):
         """ returns batches of data of size self.batch_size

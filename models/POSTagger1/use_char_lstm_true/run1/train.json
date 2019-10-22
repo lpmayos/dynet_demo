@@ -1,0 +1,11 @@
+{
+    "tagger_version": 1,
+    "data_dir": "/home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/",
+    "train_file": "en-ud-train.conllu",
+    "dev_file": "en-ud-dev.conllu",
+    "test_file": "en-ud-test.conllu",
+    "train": true,
+    "n_epochs": 3,
+    "test": true,
+    "use_char_lstm": true
+}

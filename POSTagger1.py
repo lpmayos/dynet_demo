@@ -28,7 +28,6 @@ class POSTagger1(POSTaggerBase):
     def log_parameters(self):
         POSTaggerBase.log_parameters(self)
         logging.info('use_char_lstm: % s' % self.use_char_lstm)
-        logging.info('\n\n')
 
     def build_model(self):
         """ This builds our POS-tagger model.
