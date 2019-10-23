@@ -81,27 +81,3 @@ class POSTagger1(POSTaggerBase):
             emb = dy.noise(emb, 0.1)  # Add gaussian noise to an expression (0.1 is the standard deviation of the gaussian)
 
         return emb
-
-
-def main():
-
-    # set up our data paths
-    # data_dir = "/home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/"
-    data_dir = "data/"
-    train_path = os.path.join(data_dir, "en-ud-train.conllu")
-    dev_path = os.path.join(data_dir, "en-ud-dev.conllu")
-    test_path = os.path.join(data_dir, "en-ud-test.conllu")
-
-    # create a POS tagger object
-    pt = POSTagger1(train_path=train_path, dev_path=dev_path, test_path=test_path, n_epochs=1, use_char_lstm=False)
-    pt.log_parameters()
-
-    # let's train it!
-    pt.train()
-
-    test_accuracy = pt.evaluate(pt.test_data)
-    logging.info("Test accuracy: {}".format(test_accuracy))
-
-
-if __name__ == '__main__':
-    main()
