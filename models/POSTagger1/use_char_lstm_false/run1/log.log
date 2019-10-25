@@ -2,9 +2,9 @@
 2019-10-22 12:45:45,514:INFO:	log_frequency: 1000
 2019-10-22 12:45:45,514:INFO:	n_epochs: 1
 2019-10-22 12:45:45,514:INFO:	learning_rate: 0.001
-2019-10-22 12:45:45,514:INFO:	train_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-train.conllu
-2019-10-22 12:45:45,514:INFO:	dev_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-dev.conllu
-2019-10-22 12:45:45,514:INFO:	test_path: /home/ubuntu/hd/home/lpmayos/code/dynet_demo/data/ud/en-ud-test.conllu
+2019-10-22 12:45:45,514:INFO:	train_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-train.conllu
+2019-10-22 12:45:45,514:INFO:	dev_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-dev.conllu
+2019-10-22 12:45:45,514:INFO:	test_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-test.conllu
 2019-10-22 12:45:45,514:INFO:	n_words: 9874
 2019-10-22 12:45:45,514:INFO:	n_tags: 50
 2019-10-22 12:45:45,514:INFO:	use_char_lstm: False
@@ -26,3 +26,13 @@
 
 
 2019-10-22 12:46:21,745:INFO:	Elapsed time: 36.772649399
+2019-10-25 17:10:09,304:INFO:	----------------------------------------------------------------------------------------------------
+2019-10-25 17:10:09,304:INFO:	log_frequency: 1000
+2019-10-25 17:10:09,305:INFO:	n_epochs: 1
+2019-10-25 17:10:09,305:INFO:	learning_rate: 0.001
+2019-10-25 17:10:09,305:INFO:	train_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-train.conllu
+2019-10-25 17:10:09,305:INFO:	dev_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-dev.conllu
+2019-10-25 17:10:09,305:INFO:	test_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-test.conllu
+2019-10-25 17:10:09,305:INFO:	n_words: 9874
+2019-10-25 17:10:09,305:INFO:	n_tags: 50
+2019-10-25 17:10:09,305:INFO:	use_char_lstm: False

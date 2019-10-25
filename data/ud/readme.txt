@@ -1,1 +1,1 @@
-extracted from /home/ubuntu/hd/home/lpmayos/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/
+extracted from /home/lpmayos/hd/code/datasets/ud2.1/ud-treebanks-v2.1/UD_English/

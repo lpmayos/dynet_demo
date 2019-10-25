@@ -103,7 +103,7 @@ class POSTagger4(POSTagger3):
         self.builders = builders
         self.builders_c = builders_c
 
-    def extract_kg_internal_states(self, words_ids, tags_ids, format='concat'):
+    def extract_kg_internal_states(self, words_ids, format='concat'):
         """ based on same function from UniParse.kiperwasser.py
         TODO for now we return an array, but it may be a list to combine with weights, etc
         """
@@ -111,9 +111,8 @@ class POSTagger4(POSTagger3):
         # prepare data
 
         words = [self.word_vocab.i2w[w] for w in words_ids]
-        tags = [self.tag_vocab.i2w[t] for t in tags_ids]
 
-        input_data = self.kg_vocab.word_tags_tuple_to_conll(words, tags)
+        input_data = self.kg_vocab.word_tags_tuple_to_conll(words)
         words, lemmas, tags, heads, rels, chars = input_data[0]
 
         word_ids = np.array([words])
@@ -129,22 +128,6 @@ class POSTagger4(POSTagger3):
         state_pairs_list = self.deep_bilstm.add_inputs(words)
 
         return state_pairs_list
-
-    def _get_contextual_repr_OLD(self, kg_internal_states):
-        state_layer1 = kg_internal_states[0]
-        hidden_state_layer1 = state_layer1.s()
-        hidden_state_layer1_f = np.array(hidden_state_layer1[0].value())
-        hidden_state_layer1_b = np.array(hidden_state_layer1[1].value())
-
-        state_layer2 = kg_internal_states[1]
-        hidden_state_layer2 = state_layer2.s()
-        hidden_state_layer2_f = np.array(hidden_state_layer2[0].value())
-        hidden_state_layer2_b = np.array(hidden_state_layer2[1].value())
-
-        # TODO for now we just concatenate the expressions
-        emb = np.concatenate((hidden_state_layer1_f, hidden_state_layer1_b, hidden_state_layer2_f, hidden_state_layer2_b))
-
-        return emb
 
     def _get_contextual_repr(self, kg_internal_states):
         state_layer1 = kg_internal_states[0]
@@ -198,12 +181,12 @@ class POSTagger4(POSTagger3):
         """
         dy.renew_cg()
 
-        words, tags = sent
-        kg_internal_states = self.extract_kg_internal_states(words, tags)
+        words = [self.word_vocab.w2i.get(word, self.unk) for word, _ in sent]
+        kg_internal_states = self.extract_kg_internal_states(words)
 
         f_init, b_init = [b.initial_state() for b in self.builders]
 
-        wembs = [self.get_word_repr(w, kg_internal_states[i]) for i, w, t in enumerate(sent)]
+        wembs = [self.get_word_repr(tuple[0], kg_internal_states[i]) for i, tuple in enumerate(sent)]
 
         fw = [x.output() for x in f_init.add_inputs(wembs)]
         bw = [x.output() for x in b_init.add_inputs(reversed(wembs))]
@@ -226,7 +209,7 @@ class POSTagger4(POSTagger3):
         """ Builds the graph for a single sentence.
         """
 
-        kg_internal_states = self.extract_kg_internal_states(words, tags)
+        kg_internal_states = self.extract_kg_internal_states(words)
 
         f_init, b_init = [b.initial_state() for b in self.builders]
 
