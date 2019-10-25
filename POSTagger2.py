@@ -25,6 +25,8 @@ class POSTagger2(POSTaggerBase):
 
     def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
 
+        self.word_embs_dim = 128
+
         # for character-level embeddings
         characters = list("abcdefghijklmnopqrstuvwxyz ")
         characters.append(UNK_TOKEN)
@@ -41,7 +43,7 @@ class POSTagger2(POSTaggerBase):
         model = dy.ParameterCollection()
 
         params = {}
-        word_embs_dim = 128
+        word_embs_dim = self.word_embs_dim  # 128
         params["E"] = model.add_lookup_parameters((self.n_words, word_embs_dim))
 
         # character-level embeddings

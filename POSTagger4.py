@@ -41,14 +41,6 @@ class POSTagger4(POSTagger3):
 
         POSTagger3.__init__(self, train_path, dev_path, test_path, log_path, log_frequency, n_epochs, learning_rate, batch_size)
 
-        # load K&G vocabulary and model
-
-        saved_params = self.save_needed_kg_parameters()
-        self.wlookup, self.tlookup, self.deep_bilstm = dy.load(saved_params, self.model)
-
-        # TODO how can I check if this is initializing parameters as expected?
-        # TODO how can I check if they are being trained later?
-
     def save_needed_kg_parameters(self):
         """ Checks if it exists a partial model saving containing the parameters we need, and returns its path.
         It creates the partial model saving if it does not exist.
@@ -71,10 +63,52 @@ class POSTagger4(POSTagger3):
         logging.info('kg_vocab_path: % s' % self.kg_vocab_path)
         logging.info('kg_model_path: % s' % self.kg_model_path)
 
-    def extract_contextual_embeddings(self, words_ids, tags_ids, format='concat'):
+    def build_model(self):
+        """ This builds our POS-tagger model.
+        """
+        model = dy.ParameterCollection()
+
+        params = {}
+
+
+        # load K&G vocabulary and model
+
+        saved_params = self.save_needed_kg_parameters()
+        self.wlookup, self.tlookup, self.deep_bilstm = dy.load(saved_params, model)
+        word_embs_dim = self.deep_bilstm.builder_layers[0][0].spec[1] * 4
+
+        # TODO how can I check if this is initializing parameters as expected?
+        # TODO how can I check if they are being trained later?
+
+        # character-level embeddings
+        input_size_c = 20
+        output_size_c = 64  # hidden units
+        params["CE"] = model.add_lookup_parameters((self.nchars, input_size_c))
+        builders_c = [
+            dy.LSTMBuilder(1, input_size_c, output_size_c, model),
+            dy.LSTMBuilder(1, input_size_c, output_size_c, model)]
+
+        # input encoder
+        input_size = word_embs_dim + output_size_c * 2  # word_embedding size from lookup table + character embedding size
+        output_size = 50  # hidden units
+        builders = [
+            dy.LSTMBuilder(1, input_size, output_size, model),
+            dy.LSTMBuilder(1, input_size, output_size, model)]  # num layers, input size, hidden units, model
+
+        params["H"] = model.add_parameters((32, output_size*2))
+        params["O"] = model.add_parameters((self.n_tags, 32))
+
+        self.model = model
+        self.params = params
+        self.builders = builders
+        self.builders_c = builders_c
+
+    def extract_kg_internal_states(self, words_ids, tags_ids, format='concat'):
         """ based on same function from UniParse.kiperwasser.py
         TODO for now we return an array, but it may be a list to combine with weights, etc
         """
+
+        # prepare data
 
         words = [self.word_vocab.i2w[w] for w in words_ids]
         tags = [self.tag_vocab.i2w[t] for t in tags_ids]
@@ -82,52 +116,53 @@ class POSTagger4(POSTagger3):
         input_data = self.kg_vocab.word_tags_tuple_to_conll(words, tags)
         words, lemmas, tags, heads, rels, chars = input_data[0]
 
-        word_ids = dy.inputTensor(np.array([words]))
-        tag_ids = dy.inputTensor(np.array([tags]))
+        word_ids = np.array([words])
+        tag_ids = np.array([tags])
 
-        n = word_ids.dim()[-1]
+        # extract internal states
+
+        n = word_ids.shape[-1]
 
         word_embs = [dy.lookup_batch(self.wlookup, word_ids[:, i]) for i in range(n)]
         tag_embs = [dy.lookup_batch(self.tlookup, tag_ids[:, i]) for i in range(n)]
         words = [dy.concatenate([w, p]) for w, p in zip(word_embs, tag_embs)]
         state_pairs_list = self.deep_bilstm.add_inputs(words)
 
-        total_words = len(word_ids)
-        embeddings_per_word = 4
-        embeddings_len = self.deep_bilstm.builder_layers[0][0].spec[1]  # = 125 =  word_dim + upos_dim from kiperwasser.py (TODO this is probably not the best way to get it)
-        contextual_embeddings = np.zeros((total_words, embeddings_per_word, embeddings_len))
+        return state_pairs_list
 
-        i = 0
-        for state in state_pairs_list:  # we receive one state per each word in the sample
-            state_layer1 = state[0]
-            hidden_state_layer1 = state_layer1.s()
-            hidden_state_layer1_f = np.array(hidden_state_layer1[0].value())
-            hidden_state_layer1_b = np.array(hidden_state_layer1[1].value())
+    def _get_contextual_repr_OLD(self, kg_internal_states):
+        state_layer1 = kg_internal_states[0]
+        hidden_state_layer1 = state_layer1.s()
+        hidden_state_layer1_f = np.array(hidden_state_layer1[0].value())
+        hidden_state_layer1_b = np.array(hidden_state_layer1[1].value())
 
-            state_layer2 = state[1]
-            hidden_state_layer2 = state_layer2.s()
-            hidden_state_layer2_f = np.array(hidden_state_layer2[0].value())
-            hidden_state_layer2_b = np.array(hidden_state_layer2[1].value())
+        state_layer2 = kg_internal_states[1]
+        hidden_state_layer2 = state_layer2.s()
+        hidden_state_layer2_f = np.array(hidden_state_layer2[0].value())
+        hidden_state_layer2_b = np.array(hidden_state_layer2[1].value())
 
-            contextual_embeddings[i][0] = hidden_state_layer1_f
-            contextual_embeddings[i][1] = hidden_state_layer1_b
-            contextual_embeddings[i][2] = hidden_state_layer2_f
-            contextual_embeddings[i][3] = hidden_state_layer2_b
+        # TODO for now we just concatenate the expressions
+        emb = np.concatenate((hidden_state_layer1_f, hidden_state_layer1_b, hidden_state_layer2_f, hidden_state_layer2_b))
 
-            i += 1
+        return emb
 
-        if format == 'average':
-            raise NotImplementedError
-        elif format == 'max':
-            raise NotImplementedError
-        else:  # default: concat
-            embeddings_dimension = contextual_embeddings.shape[1] * contextual_embeddings.shape[2]
-            embeddings = contextual_embeddings.reshape((contextual_embeddings.shape[0], embeddings_dimension))
+    def _get_contextual_repr(self, kg_internal_states):
+        state_layer1 = kg_internal_states[0]
+        hidden_state_layer1 = state_layer1.s()
+        hidden_state_layer1_f = hidden_state_layer1[0]
+        hidden_state_layer1_b = hidden_state_layer1[1]
 
-        embeddings = embeddings.astype(np.float32)
-        return embeddings
+        state_layer2 = kg_internal_states[1]
+        hidden_state_layer2 = state_layer2.s()
+        hidden_state_layer2_f = hidden_state_layer2[0]
+        hidden_state_layer2_b = hidden_state_layer2[1]
 
-    def get_word_repr(self, w, contextual_emb, add_noise=False):
+        # TODO for now we just concatenate the expressions
+        emb = dy.concatenate([hidden_state_layer1_f, hidden_state_layer1_b, hidden_state_layer2_f, hidden_state_layer2_b])
+
+        return emb
+
+    def get_word_repr(self, w, kg_internal_states, add_noise=False):
         """
         """
         if isinstance(w, str):
@@ -137,8 +172,8 @@ class POSTagger4(POSTagger3):
             word_id = w
             word = self.word_vocab.i2w.get(w, self.unk)
 
-        # get word_embedding
-        w_emb = contextual_emb
+        # get contextual word_embedding
+        w_emb = self._get_contextual_repr(kg_internal_states)
 
         # add char-level embedding
         char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in word]
@@ -161,14 +196,14 @@ class POSTagger4(POSTagger3):
     def tag_sent(self, sent):
         """ Tags a single sentence.
         """
-        words, tags = sent
-        contextual_embs = self.extract_contextual_embeddings(words, tags)
-
         dy.renew_cg()
+
+        words, tags = sent
+        kg_internal_states = self.extract_kg_internal_states(words, tags)
 
         f_init, b_init = [b.initial_state() for b in self.builders]
 
-        wembs = [self.get_word_repr(w, contextual_embs[i]) for i, w, t in enumerate(sent)]
+        wembs = [self.get_word_repr(w, kg_internal_states[i]) for i, w, t in enumerate(sent)]
 
         fw = [x.output() for x in f_init.add_inputs(wembs)]
         bw = [x.output() for x in b_init.add_inputs(reversed(wembs))]
@@ -191,11 +226,11 @@ class POSTagger4(POSTagger3):
         """ Builds the graph for a single sentence.
         """
 
-        contextual_embs = self.extract_contextual_embeddings(words, tags)
+        kg_internal_states = self.extract_kg_internal_states(words, tags)
 
         f_init, b_init = [b.initial_state() for b in self.builders]
 
-        wembs = [self.get_word_repr(w, contextual_embs[i], add_noise=False) for i, w in enumerate(words)]  # TODO see what happens with/without adding noise
+        wembs = [self.get_word_repr(w, kg_internal_states[i], add_noise=False) for i, w in enumerate(words)]  # TODO see what happens with/without adding noise
 
         # transduce takes a list of expressions, feeds them and returns a list; it is equivalent to:
         fw = f_init.transduce(wembs)            # fw = [x.output() for x in f_init.add_inputs(wembs)]
