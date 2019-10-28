@@ -6,15 +6,18 @@ from POSTaggerBase import POSTaggerBase, UNK_TOKEN
 
 class POSTagger1(POSTaggerBase):
     """
-    POSTagger1 allows to use a character-based bi-LSTM for unknown words:
+    POSTagger1 allows to use an embeddings lookup table or a character-based bi-LSTM:
 
         [word1, word2, ...] --> lookup table or char_bilstm --> we --> biLSTM  --> MLP --> tags
     """
 
     def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001, use_char_lstm=False):
 
+        self.word_embs_dim = 128
+
         self.use_char_lstm = use_char_lstm
 
+        # for character-level embeddings
         if self.use_char_lstm:
             characters = list("abcdefghijklmnopqrstuvwxyz ")
             characters.append(UNK_TOKEN)
@@ -34,22 +37,33 @@ class POSTagger1(POSTaggerBase):
         """
         model = dy.ParameterCollection()
 
-        params = {"E": model.add_lookup_parameters((self.n_words, 128)),
-                  "H": model.add_parameters((32, 50 * 2)),
-                  "O": model.add_parameters((self.n_tags, 32))}
+        params = {}
 
+        if not self.use_char_lstm:
+            word_embs_dim = self.word_embs_dim  # 128
+            params["E"] = model.add_lookup_parameters((self.n_words, word_embs_dim))
+        else:
+            # character-level embeddings
+            input_size_c = 20
+            output_size_c = 64  # hidden units
+            params["CE"] = model.add_lookup_parameters((self.nchars, input_size_c))
+            builders_c = [
+                dy.LSTMBuilder(1, input_size_c, output_size_c, model),
+                dy.LSTMBuilder(1, input_size_c, output_size_c, model)]
+            self.builders_c = builders_c
+
+        # input encoder
         builders = [
             dy.LSTMBuilder(1, 128, 50, model),
             dy.LSTMBuilder(1, 128, 50, model)]  # 1 layer, 128 input size, 50 hidden units, model
 
-        if self.use_char_lstm:
-            params["CE"] = model.add_lookup_parameters((self.nchars, 20))  # TODO how do I know if it is being updated un backward() <-- it should not, as I'm not using it in training (just for the missing words in test)
-            self.fwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
-            self.bwdRNN_chars = dy.LSTMBuilder(1, 20, 64, model)
+        params["H"] = model.add_parameters((32, 50*2))
+        params["O"] = model.add_parameters((self.n_tags, 32))
 
         self.model = model
         self.params = params
         self.builders = builders
+
 
     def get_word_repr(self, w, add_noise=False):
         """
@@ -64,18 +78,14 @@ class POSTagger1(POSTaggerBase):
         if not self.use_char_lstm:
             emb = self.params["E"][word_id]
         else:
-            if self.word_vocab.wc[w] > 1:  # TODO review min appearances to use embedding; originally 5
-                emb = self.params["E"][word_id]
-            else:
-                char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in word]
-                char_embs = [self.params["CE"][cid] for cid in char_ids]
+            char_ids = [self.c2i.get(c.lower(), self.unk_c) for c in word]
+            char_embs = [self.params["CE"][cid] for cid in char_ids]
 
-                f_init = self.fwdRNN_chars.initial_state()
-                b_init = self.bwdRNN_chars.initial_state()
+            f_init, b_init = [b.initial_state() for b in self.builders_c]
 
-                fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
-                bw_exps = b_init.transduce(reversed(char_embs))
-                emb = dy.concatenate([fw_exps[-1], bw_exps[-1]])
+            fw_exps = f_init.transduce(char_embs)  # takes a list of expressions, feeds them and returns a list
+            bw_exps = b_init.transduce(reversed(char_embs))
+            emb = dy.concatenate([fw_exps[-1], bw_exps[-1]])
 
         if add_noise:
             emb = dy.noise(emb, 0.1)  # Add gaussian noise to an expression (0.1 is the standard deviation of the gaussian)
