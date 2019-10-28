@@ -5,7 +5,7 @@
     "dev_file": "en-ud-dev.conllu",
     "test_file": "en-ud-test.conllu",
     "train": true,
-    "n_epochs": 1,
+    "n_epochs": 5,
     "test": true,
     "use_char_lstm": false
 }
