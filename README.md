@@ -11,7 +11,7 @@ Allows to use an embeddings lookup table or a character-based bi-LSTM:
 - with lookup table:
     - Test accuracy: 0.8949276805992749
     - Elapsed time: 192.212525121
-- with char LSTM:
+- with char biLSTM:
     - Test accuracy: 0.8724150296848229
     - Elapsed time: 529.6719069080001
 
@@ -27,15 +27,26 @@ NOTICE how each sequence has a different length, but its OK, the LstmAcceptor do
     [word1, word2, ...]                                                                     --> [we + we2_c] --> biLSTM --> MLP --> tags
                           --> char biLSTM [lookup table --> we_c --> biLSTM   --> we2_c]
 
-- Test accuracy: 0.9168426505159979
-- Elapsed time: 921.129285493
+- without autobatching:
+    - Test accuracy: 0.9168426505159979
+    - Elapsed time: 921.129285493
+- with autobatching:
+    - Test accuracy: 0.9113439853368929
+    - Elapsed time: 646.87033149
 
 ## POSTagger3
 
 Identical to POSTagger2, but it allows **minibatching**.
 
-- Test accuracy: 0.9081961987488545
-- Elapsed time: 988.706079337
+- batch 32:
+    - Test accuracy: 0.9081961987488545
+    - Elapsed time: 988.706079337
+- batch 64:
+    - Test accuracy: 0.8979160855879189
+    - Elapsed time: 639.832461975
+- batch 128:
+    - Test accuracy: 0.8738096186795234
+    - Elapsed time: 678.990824393
 
 ## POSTagger4
 
@@ -54,5 +65,19 @@ More precisely, we parse the input sentence and for each word concatenate the in
     - Test accuracy: 0.9109455313384069
     - Elapsed time: 2598.515521656
 
+
+# Observations:
+
+- a we lookup table is faster and more accurate than char biLSTM, but
+    - a combination of both is better
+- autobatching effectively reduces training time without reducing accuracy
+- minibatching:
+    - does not help much in comparison with just using autobatching
+    - batches of 64 are faster than 32, but
+        - batches of 128 are slower than 64
+- K&G mini_test is too small (small vocabulary) to produce high accuracy
+
+
 # TODO:
+
 - improve model saving with best three model saving. Is there something automatic?
