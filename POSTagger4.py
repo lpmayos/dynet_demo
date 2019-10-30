@@ -26,8 +26,8 @@ class POSTagger4(POSTagger3):
     for each example, at exactly the desired length.
 
                           --> K&G parser    --> we
-    [word1, word2, ...]                                                       --> [we + we2_c] --> biLSTM --> MLP --> tags
-                          --> lookup table  --> we_c --> biLSTM   --> we2_c
+    [word1, word2, ...]                                                                         --> [we + we2_c] --> biLSTM --> MLP --> tags
+                          --> char biLSTM [lookup table  --> we_c --> biLSTM   --> we2_c]
 
     """
 

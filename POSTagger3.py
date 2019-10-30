@@ -12,8 +12,8 @@ class POSTagger3(POSTagger2):
     IMPORTANT!! activate autobatching with --dynet-autobatch 1
 
                           --> lookup table --> we
-    [word1, word2, ...]                                                       --> [we + we2_c] --> biLSTM --> MLP --> tags
-                          --> lookup table --> we_c --> biLSTM   --> we2_c
+    [word1, word2, ...]                                                                     --> [we + we2_c] --> biLSTM --> MLP --> tags
+                          --> char biLSTM [lookup table --> we_c --> biLSTM   --> we2_c]
 
     NOTICE that we need the char biLSTM because otherwise we_c would be an embedding for each character, and we need
     something with fixed size!

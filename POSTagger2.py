@@ -13,14 +13,9 @@ class POSTagger2(POSTaggerBase):
     for each example, at exactly the desired length.
 
                           --> lookup table --> we
-    [word1, word2, ...]                                                       --> [we + we2_c] --> biLSTM --> MLP --> tags
-                          --> lookup table --> we_c --> biLSTM   --> we2_c
+    [word1, word2, ...]                                                                     --> [we + we2_c] --> biLSTM --> MLP --> tags
+                          --> char biLSTM [lookup table --> we_c --> biLSTM   --> we2_c]
 
-
-    TODO implement this option?
-                          --> lookup table --> we     --> biLSTM  --> we2
-    [word1, word2, ...]                                                       --> [we + we2_c] --> MLP --> tags
-                          --> lookup table --> we_c   --> biLSTM  --> we2_c
     """
 
     def __init__(self, train_path, dev_path, test_path, log_path, log_frequency=1000, n_epochs=5, learning_rate=0.001):
