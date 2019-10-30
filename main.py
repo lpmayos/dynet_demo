@@ -8,6 +8,7 @@ from POSTagger1 import POSTagger1
 from POSTagger2 import POSTagger2
 from POSTagger3 import POSTagger3
 from POSTagger4 import POSTagger4
+from POSTagger5 import POSTagger5
 
 
 def main(config):
@@ -39,6 +40,13 @@ def main(config):
         kg_vocab_path = config['kg_vocab_path']
         kg_model_path = config['kg_model_path']
         pt = POSTagger4(train_path=train_path, dev_path=dev_path, test_path=test_path, log_path=log_path, kg_vocab_path=kg_vocab_path, kg_model_path=kg_model_path, n_epochs=config['n_epochs'], batch_size=batch_size)
+
+    elif config['tagger_version'] == 5:
+        batch_size = config['batch_size']
+        kg_vocab_path = config['kg_vocab_path']
+        kg_model_path = config['kg_model_path']
+        train_kg = config['train_kg']
+        pt = POSTagger5(train_path=train_path, dev_path=dev_path, test_path=test_path, log_path=log_path, kg_vocab_path=kg_vocab_path, kg_model_path=kg_model_path, train_kg=train_kg, n_epochs=config['n_epochs'], batch_size=batch_size)
 
 
     logging.info('----------------------------------------------------------------------------------------------------')

@@ -1,0 +1,14 @@
+{
+    "tagger_version": 5,
+    "data_dir": "/home/lpmayos/hd/code/dynet_demo/data/ud/",
+    "train_file": "en-ud-train.conllu",
+    "dev_file": "en-ud-dev.conllu",
+    "test_file": "en-ud-test.conllu",
+    "train": true,
+    "n_epochs": 5,
+    "test": true,
+    "batch_size": 64,
+    "kg_vocab_path": "/home/lpmayos/hd/code/UniParse/models/kiperwasser/1b/bpe/mini/only_words_true/run1/vocab.pkl",
+    "kg_model_path": "/home/lpmayos/hd/code/UniParse/models/kiperwasser/1b/bpe/mini/only_words_true/run1/model.model",
+    "train_kg": false
+}

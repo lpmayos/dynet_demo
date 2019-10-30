@@ -65,6 +65,19 @@ More precisely, we parse the input sentence and for each word concatenate the in
     - Test accuracy: 0.9109455313384069
     - Elapsed time: 2598.515521656
 
+## POSTagger5
+
+POSTagger5 uses word embeddings extracted from a graph-based parser to represent words, and feeds them through a biLSTM to generate tags. More precisely, we parse the input sentence and for each word concatenate the internal states of the biLSTM
+
+    [word1, word2, ...]     --> K&G parser    --> we    -->     biLSTM --> MLP --> tags
+
+- training k&g bilstm:
+    - Test accuracy (batch 64): 0.8819779256484839
+    - Elapsed time (batch 64): 1677.5446682660001
+- not training k&g bilstm:
+    - Test accuracy: 0.8208949276805992
+    - Elapsed time: 1715.706458879
+
 
 # Observations:
 
@@ -81,3 +94,5 @@ More precisely, we parse the input sentence and for each word concatenate the in
 # TODO:
 
 - improve model saving with best three model saving. Is there something automatic?
+- explore id adding noise helps
+- think about normalization!

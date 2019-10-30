@@ -1,0 +1,84 @@
+2019-10-30 14:43:45,042:INFO:	----------------------------------------------------------------------------------------------------
+2019-10-30 14:43:45,042:INFO:	log_frequency: 1000
+2019-10-30 14:43:45,042:INFO:	n_epochs: 5
+2019-10-30 14:43:45,042:INFO:	learning_rate: 0.001
+2019-10-30 14:43:45,042:INFO:	train_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-train.conllu
+2019-10-30 14:43:45,042:INFO:	dev_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-dev.conllu
+2019-10-30 14:43:45,042:INFO:	test_path: /home/lpmayos/hd/code/dynet_demo/data/ud/en-ud-test.conllu
+2019-10-30 14:43:45,042:INFO:	n_words: 9874
+2019-10-30 14:43:45,042:INFO:	n_tags: 50
+2019-10-30 14:43:45,042:INFO:	batch_size: 64
+2019-10-30 14:43:45,042:INFO:	kg_vocab_path: /home/lpmayos/hd/code/UniParse/models/kiperwasser/1b/bpe/mini/only_words_true/run1/vocab.pkl
+2019-10-30 14:43:45,043:INFO:	kg_model_path: /home/lpmayos/hd/code/UniParse/models/kiperwasser/1b/bpe/mini/only_words_true/run1/model.model
+2019-10-30 14:43:45,043:INFO:	train_kg: False
+2019-10-30 14:44:11,307:INFO:	Epoch 0 Iter 1024 Loss: 3.395524 Accuracy: 0.2790
+2019-10-30 14:44:37,317:INFO:	Epoch 0 Iter 2048 Loss: 2.672639 Accuracy: 0.5262
+2019-10-30 14:45:03,708:INFO:	Epoch 0 Iter 3008 Loss: 2.155322 Accuracy: 0.6063
+2019-10-30 14:45:30,070:INFO:	Epoch 0 Iter 4032 Loss: 1.779069 Accuracy: 0.6457
+2019-10-30 14:45:57,028:INFO:	Epoch 0 Iter 5056 Loss: 1.501165 Accuracy: 0.6695
+2019-10-30 14:46:22,946:INFO:	Epoch 0 Iter 6016 Loss: 1.280324 Accuracy: 0.6913
+2019-10-30 14:46:48,555:INFO:	Epoch 0 Iter 7040 Loss: 1.171129 Accuracy: 0.7153
+2019-10-30 14:47:13,954:INFO:	Epoch 0 Iter 8000 Loss: 1.041005 Accuracy: 0.7279
+2019-10-30 14:47:24,982:INFO:	Epoch 0 Iter 8064 Loss: 0.948426 Accuracy: 0.7285
+2019-10-30 14:47:51,337:INFO:	Epoch 0 Iter 9024 Loss: 0.942536 Accuracy: 0.7438
+2019-10-30 14:48:18,955:INFO:	Epoch 0 Iter 10048 Loss: 0.908380 Accuracy: 0.7538
+2019-10-30 14:48:44,787:INFO:	Epoch 0 Iter 11008 Loss: 0.819706 Accuracy: 0.7586
+2019-10-30 14:49:10,837:INFO:	Epoch 0 Iter 12032 Loss: 0.833989 Accuracy: 0.7649
+2019-10-30 14:49:46,427:INFO:	Epoch 1 Iter 1024 Loss: 0.776825 Accuracy: 0.7741
+2019-10-30 14:50:13,725:INFO:	Epoch 1 Iter 2048 Loss: 0.737921 Accuracy: 0.7750
+2019-10-30 14:50:39,385:INFO:	Epoch 1 Iter 3008 Loss: 0.726068 Accuracy: 0.7775
+2019-10-30 14:51:05,749:INFO:	Epoch 1 Iter 4032 Loss: 0.687206 Accuracy: 0.7817
+2019-10-30 14:51:33,775:INFO:	Epoch 1 Iter 5056 Loss: 0.691970 Accuracy: 0.7833
+2019-10-30 14:52:00,348:INFO:	Epoch 1 Iter 6016 Loss: 0.661554 Accuracy: 0.7861
+2019-10-30 14:52:27,033:INFO:	Epoch 1 Iter 7040 Loss: 0.650066 Accuracy: 0.7906
+2019-10-30 14:52:52,303:INFO:	Epoch 1 Iter 8000 Loss: 0.653114 Accuracy: 0.7907
+2019-10-30 14:53:04,132:INFO:	Epoch 1 Iter 8064 Loss: 0.737785 Accuracy: 0.7911
+2019-10-30 14:53:29,123:INFO:	Epoch 1 Iter 9024 Loss: 0.637709 Accuracy: 0.7925
+2019-10-30 14:53:57,457:INFO:	Epoch 1 Iter 10048 Loss: 0.633457 Accuracy: 0.7953
+2019-10-30 14:54:23,579:INFO:	Epoch 1 Iter 11008 Loss: 0.610793 Accuracy: 0.7965
+2019-10-30 14:54:50,105:INFO:	Epoch 1 Iter 12032 Loss: 0.614488 Accuracy: 0.7982
+2019-10-30 14:55:26,601:INFO:	Epoch 2 Iter 1024 Loss: 0.608450 Accuracy: 0.8020
+2019-10-30 14:55:53,823:INFO:	Epoch 2 Iter 2048 Loss: 0.575973 Accuracy: 0.8015
+2019-10-30 14:56:19,728:INFO:	Epoch 2 Iter 3008 Loss: 0.575925 Accuracy: 0.8013
+2019-10-30 14:56:45,453:INFO:	Epoch 2 Iter 4032 Loss: 0.570106 Accuracy: 0.8045
+2019-10-30 14:57:11,409:INFO:	Epoch 2 Iter 5056 Loss: 0.583313 Accuracy: 0.8047
+2019-10-30 14:57:37,561:INFO:	Epoch 2 Iter 6016 Loss: 0.562505 Accuracy: 0.8080
+2019-10-30 14:58:06,326:INFO:	Epoch 2 Iter 7040 Loss: 0.557776 Accuracy: 0.8064
+2019-10-30 14:58:33,399:INFO:	Epoch 2 Iter 8000 Loss: 0.586396 Accuracy: 0.8069
+2019-10-30 14:58:44,604:INFO:	Epoch 2 Iter 8064 Loss: 0.518389 Accuracy: 0.8072
+2019-10-30 14:59:10,719:INFO:	Epoch 2 Iter 9024 Loss: 0.567038 Accuracy: 0.8085
+2019-10-30 14:59:38,047:INFO:	Epoch 2 Iter 10048 Loss: 0.539131 Accuracy: 0.8091
+2019-10-30 15:00:05,108:INFO:	Epoch 2 Iter 11008 Loss: 0.536737 Accuracy: 0.8102
+2019-10-30 15:00:33,848:INFO:	Epoch 2 Iter 12032 Loss: 0.563967 Accuracy: 0.8099
+2019-10-30 15:01:07,834:INFO:	Epoch 3 Iter 1024 Loss: 0.530483 Accuracy: 0.8110
+2019-10-30 15:01:34,438:INFO:	Epoch 3 Iter 2048 Loss: 0.539397 Accuracy: 0.8134
+2019-10-30 15:02:00,427:INFO:	Epoch 3 Iter 3008 Loss: 0.536243 Accuracy: 0.8132
+2019-10-30 15:02:27,317:INFO:	Epoch 3 Iter 4032 Loss: 0.509746 Accuracy: 0.8144
+2019-10-30 15:02:53,939:INFO:	Epoch 3 Iter 5056 Loss: 0.523624 Accuracy: 0.8156
+2019-10-30 15:03:20,379:INFO:	Epoch 3 Iter 6016 Loss: 0.517122 Accuracy: 0.8141
+2019-10-30 15:03:47,116:INFO:	Epoch 3 Iter 7040 Loss: 0.502764 Accuracy: 0.8153
+2019-10-30 15:04:12,812:INFO:	Epoch 3 Iter 8000 Loss: 0.521410 Accuracy: 0.8152
+2019-10-30 15:04:25,464:INFO:	Epoch 3 Iter 8064 Loss: 0.517559 Accuracy: 0.8153
+2019-10-30 15:04:51,052:INFO:	Epoch 3 Iter 9024 Loss: 0.515926 Accuracy: 0.8163
+2019-10-30 15:05:18,329:INFO:	Epoch 3 Iter 10048 Loss: 0.504303 Accuracy: 0.8173
+2019-10-30 15:05:45,580:INFO:	Epoch 3 Iter 11008 Loss: 0.496292 Accuracy: 0.8168
+2019-10-30 15:06:13,413:INFO:	Epoch 3 Iter 12032 Loss: 0.508584 Accuracy: 0.8182
+2019-10-30 15:06:49,461:INFO:	Epoch 4 Iter 1024 Loss: 0.486930 Accuracy: 0.8197
+2019-10-30 15:07:19,202:INFO:	Epoch 4 Iter 2048 Loss: 0.485324 Accuracy: 0.8194
+2019-10-30 15:07:45,301:INFO:	Epoch 4 Iter 3008 Loss: 0.492609 Accuracy: 0.8166
+2019-10-30 15:08:13,000:INFO:	Epoch 4 Iter 4032 Loss: 0.475226 Accuracy: 0.8183
+2019-10-30 15:08:40,002:INFO:	Epoch 4 Iter 5056 Loss: 0.495290 Accuracy: 0.8208
+2019-10-30 15:09:08,903:INFO:	Epoch 4 Iter 6016 Loss: 0.460521 Accuracy: 0.8178
+2019-10-30 15:09:36,829:INFO:	Epoch 4 Iter 7040 Loss: 0.487763 Accuracy: 0.8170
+2019-10-30 15:10:01,676:INFO:	Epoch 4 Iter 8000 Loss: 0.479441 Accuracy: 0.8178
+2019-10-30 15:10:13,286:INFO:	Epoch 4 Iter 8064 Loss: 0.437380 Accuracy: 0.8172
+2019-10-30 15:10:37,990:INFO:	Epoch 4 Iter 9024 Loss: 0.491484 Accuracy: 0.8203
+2019-10-30 15:11:04,709:INFO:	Epoch 4 Iter 10048 Loss: 0.481935 Accuracy: 0.8205
+2019-10-30 15:11:31,570:INFO:	Epoch 4 Iter 11008 Loss: 0.487719 Accuracy: 0.8213
+2019-10-30 15:11:59,694:INFO:	Epoch 4 Iter 12032 Loss: 0.488187 Accuracy: 0.8193
+2019-10-30 15:12:18,763:INFO:	
+2019-10-30 15:12:18,763:INFO:	Test accuracy: 0.8208949276805992
+2019-10-30 15:12:18,763:INFO:	----------------------------------------------------------------------------------------------------
+
+
+2019-10-30 15:12:18,783:INFO:	Elapsed time: 1715.706458879
