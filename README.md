@@ -68,20 +68,21 @@ More precisely, we parse the input sentence and for each word concatenate the in
 ## POSTagger5
 
 POSTagger5 uses word embeddings extracted from a graph-based parser to represent words, and feeds them through a biLSTM to generate tags. More precisely, we parse the input sentence and for each word concatenate the internal states of the biLSTM
+It allows training the K&G biLSTM or to use it frozen, and logs information to prove it.
 
     [word1, word2, ...]     --> K&G parser    --> we    -->     biLSTM --> MLP --> tags
 
 - training k&g bilstm:
-    - Test accuracy (batch 64): 0.8819779256484839
-    - Elapsed time (batch 64): 1677.5446682660001
+    - Test accuracy (batch 64): 0.8814599354504522
+    - Elapsed time (batch 64): 1889.5774094570002
 - not training k&g bilstm:
-    - Test accuracy: 0.8208949276805992
-    - Elapsed time: 1715.706458879
+    - Test accuracy: 0.8222895166752998
+    - Elapsed time: 1854.058410833
 
 
 # Observations:
 
-- a we lookup table is faster and more accurate than char biLSTM, but
+- a word embedding lookup table is faster and more accurate than char biLSTM, but
     - a combination of both is better
 - autobatching effectively reduces training time without reducing accuracy
 - minibatching:
@@ -94,5 +95,5 @@ POSTagger5 uses word embeddings extracted from a graph-based parser to represent
 # TODO:
 
 - improve model saving with best three model saving. Is there something automatic?
-- explore id adding noise helps
+- explore if adding noise helps
 - think about normalization!

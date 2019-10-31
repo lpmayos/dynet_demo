@@ -1,3 +1,4 @@
+import copy
 import os
 import dynet as dy
 import numpy as np
@@ -56,6 +57,24 @@ class POSTagger5(POSTagger3):
         logging.info('kg_model_path: % s' % self.kg_model_path)
         logging.info('train_kg: % s' % self.train_kg)
 
+    def save_original_parameters(self):
+        self.original_H = copy.copy(self.params['H'].npvalue())
+        self.original_lstm_value = copy.copy(self.builders[0].get_parameters()[0][0].npvalue())
+        self.original_lstm_kg_value = copy.copy(self.deep_bilstm.builder_layers[0][0].get_parameters()[0][0].npvalue())
+
+    def check_if_parameters_changed(self):
+        logging.info("................... self.traing_kg = %s" % self.train_kg)
+
+        comparison = False not in self.original_H == self.params['H'].npvalue()
+        logging.info("self.original_H == self.params['H'].npvalue()? %s" % np.all(comparison == True))
+
+        comparison = False not in self.original_lstm_value == self.builders[0].get_parameters()[0][0].npvalue()
+        logging.info("self.original_lstm_value == self.builders[0].get_parameters()[0][0].npvalue()? %s" % np.all(comparison == True))
+
+        comparison = False not in self.original_lstm_kg_value == self.deep_bilstm.builder_layers[0][0].get_parameters()[0][0].npvalue()
+        logging.info("self.original_lstm_kg_value == self.deep_bilstm.builder_layers[0][0].get_parameters()[0][0].npvalue()? %s" % np.all(comparison == True))
+
+
     def build_model(self):
         """ This builds our POS-tagger model.
         """
@@ -70,14 +89,12 @@ class POSTagger5(POSTagger3):
         if self.train_kg:
             self.wlookup, self.tlookup, self.deep_bilstm = dy.load(saved_params, model)
         else:
+            # we load parameters to another param collection, so the trainer does not update them!
             model2 = dy.ParameterCollection()
             self.wlookup, self.tlookup, self.deep_bilstm = dy.load(saved_params, model2)
-        word_embs_dim = self.deep_bilstm.builder_layers[0][0].spec[1] * 4
-
-        # TODO how can I check if this is initializing parameters as expected?
-        # TODO how can I check if they are being trained later?
 
         # input encoder
+        word_embs_dim = self.deep_bilstm.builder_layers[0][0].spec[1] * 4
         input_size = word_embs_dim  # word_embedding size from lookup table + character embedding size
         output_size = 50  # hidden units
         builders = [
@@ -90,6 +107,10 @@ class POSTagger5(POSTagger3):
         self.model = model
         self.params = params
         self.builders = builders
+
+        # INFO just to check if it changes or not with training
+        self.save_original_parameters()
+        self.check_if_parameters_changed()
 
     def extract_kg_internal_states(self, words_ids, format='concat'):
         """ based on same function from UniParse.kiperwasser.py

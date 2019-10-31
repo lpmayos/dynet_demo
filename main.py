@@ -64,6 +64,9 @@ def main(config):
     logging.info('')
     logging.info("Test accuracy: {}".format(test_accuracy))
 
+    if config['tagger_version'] == 5:
+        pt.check_if_parameters_changed()
+
     logging.info('----------------------------------------------------------------------------------------------------\n\n')
 
 
